@@ -1,0 +1,49 @@
+- [#1](https://github.com/kluth/stream-buddy/issues/1) - [Phase 1] Create TypeScript type definitions for media streaming domain models
+- [#2](https://github.com/kluth/stream-buddy/issues/2) - [Phase 1] Implement MediaCaptureService for camera and microphone capture
+- [#3](https://github.com/kluth/stream-buddy/issues/3) - [Phase 1] Create test utilities and mocks for MediaStream and RTCPeerConnection
+- [#4](https://github.com/kluth/stream-buddy/issues/4) - [Phase 1] Write comprehensive unit tests for MediaCaptureService
+- [#5](https://github.com/kluth/stream-buddy/issues/5) - [Phase 1] Create VideoPreviewComponent with signal-based state management
+- [#6](https://github.com/kluth/stream-buddy/issues/6) - [Phase 1] Set up HTTPS development environment with mkcert
+- [#7](https://github.com/kluth/stream-buddy/issues/7) - [Phase 1] Create stream-setup feature module with lazy loading
+- [#8](https://github.com/kluth/stream-buddy/issues/8) - [Phase 1] Create basic scene compositor service with single source support
+- [#9](https://github.com/kluth/stream-buddy/issues/9) - [Phase 2] Deploy MediaMTX server with Docker configuration
+- [#10](https://github.com/kluth/stream-buddy/issues/10) - [Phase 2] Implement WebRTCGatewayService for peer connection management
+- [#11](https://github.com/kluth/stream-buddy/issues/11) - [Phase 2] Create test utilities and mocks for WebRTC testing
+- [#12](https://github.com/kluth/stream-buddy/issues/12) - [Phase 2] Write unit tests for WebRTCGatewayService
+- [#13](https://github.com/kluth/stream-buddy/issues/13) - [Phase 2] Implement stream statistics monitoring service
+- [#14](https://github.com/kluth/stream-buddy/issues/14) - [Phase 2] Create StreamStatsComponent to display real-time metrics
+- [#15](https://github.com/kluth/stream-buddy/issues/15) - [Phase 3] Create Node.js BFF backend with Express and TypeScript
+- [#16](https://github.com/kluth/stream-buddy/issues/16) - [Phase 3] Implement security middleware (CSP, CSRF, HTTPS, rate limiting)
+- [#17](https://github.com/kluth/stream-buddy/issues/17) - [Phase 3] Implement CSRF token handling in Angular interceptor
+- [#18](https://github.com/kluth/stream-buddy/issues/18) - [Phase 3] Create OAuth 2.0 PKCE flow implementation for backend
+- [#19](https://github.com/kluth/stream-buddy/issues/19) - [Phase 3] Implement Twitch OAuth integration with backend
+- [#20](https://github.com/kluth/stream-buddy/issues/20) - [Phase 3] Implement YouTube OAuth integration with backend
+- [#21](https://github.com/kluth/stream-buddy/issues/21) - [Phase 3] Create PlatformAuthService in Angular for OAuth flows
+- [#22](https://github.com/kluth/stream-buddy/issues/22) - [Phase 3] Create platform-manager feature module with OAuth UI
+- [#23](https://github.com/kluth/stream-buddy/issues/23) - [Phase 4] Implement Twitch streaming API integration in backend
+- [#24](https://github.com/kluth/stream-buddy/issues/24) - [Phase 4] Implement YouTube Live streaming API integration in backend
+- [#25](https://github.com/kluth/stream-buddy/issues/25) - [Phase 4] Implement StreamOrchestrationService for multi-platform coordination
+- [#26](https://github.com/kluth/stream-buddy/issues/26) - [Phase 4] Configure MediaMTX for multiple simultaneous RTMP outputs
+- [#27](https://github.com/kluth/stream-buddy/issues/27) - [Phase 4] Create live-dashboard feature module with stream controls
+- [#28](https://github.com/kluth/stream-buddy/issues/28) - [Phase 4] Implement end-to-end integration test for multi-platform streaming
+- [#29](https://github.com/kluth/stream-buddy/issues/29) - [Phase 5] Enhance SceneCompositorService for multi-source support
+- [#30](https://github.com/kluth/stream-buddy/issues/30) - [Phase 5] Implement text overlay support with XSS protection
+- [#31](https://github.com/kluth/stream-buddy/issues/31) - [Phase 5] Implement image overlay support
+- [#32](https://github.com/kluth/stream-buddy/issues/32) - [Phase 5] Create scene-editor feature module with drag-and-drop UI
+- [#33](https://github.com/kluth/stream-buddy/issues/33) - [Phase 5] Implement scene preset management system
+- [#34](https://github.com/kluth/stream-buddy/issues/34) - [Phase 6] Implement AudioMixerService using Web Audio API
+- [#35](https://github.com/kluth/stream-buddy/issues/35) - [Phase 6] Implement audio metering with AnalyserNode
+- [#36](https://github.com/kluth/stream-buddy/issues/36) - [Phase 6] Create AudioMeterComponent for visual level display
+- [#37](https://github.com/kluth/stream-buddy/issues/37) - [Phase 6] Implement audio processing filters (noise suppression, echo cancellation)
+- [#38](https://github.com/kluth/stream-buddy/issues/38) - [Phase 6] Test audio/video sync and verify < 50ms drift
+- [#39](https://github.com/kluth/stream-buddy/issues/39) - [Phase 7] Implement Instagram RTMP streaming support
+- [#40](https://github.com/kluth/stream-buddy/issues/40) - [Phase 7] Add vertical format support (9:16) to SceneCompositorService
+- [#41](https://github.com/kluth/stream-buddy/issues/41) - [Phase 7] Implement platform-specific stream validators
+- [#42](https://github.com/kluth/stream-buddy/issues/42) - [Phase 7] Create stream configuration UI with platform-specific validation
+- [#43](https://github.com/kluth/stream-buddy/issues/43) - [Phase 7] Document TikTok limitations and provide alternative guidance
+- [#44](https://github.com/kluth/stream-buddy/issues/44) - [Phase 8] Implement comprehensive error tracking with Sentry integration
+- [#45](https://github.com/kluth/stream-buddy/issues/45) - [Phase 8] Implement performance monitoring and metrics collection
+- [#46](https://github.com/kluth/stream-buddy/issues/46) - [Phase 8] Conduct OWASP Top 10 security audit and remediation
+- [#47](https://github.com/kluth/stream-buddy/issues/47) - [Phase 8] Optimize bundle size and implement code splitting
+- [#48](https://github.com/kluth/stream-buddy/issues/48) - [Phase 8] Load test MediaMTX for 10+ concurrent streams
+- [#49](https://github.com/kluth/stream-buddy/issues/49) - [Phase 8] Create comprehensive deployment documentation
