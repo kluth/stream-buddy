@@ -1,0 +1,55 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.preview-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #000;
+  border-radius: 8px;
+  overflow: hidden;
+
+  &:focus {
+    outline: 2px solid var(--focus-color, #4d90fe);
+    outline-offset: 2px;
+  }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+// ===== EMPTY STATE =====
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.empty-state-icon {
+  margin-bottom: 1rem;
+  color: #6b7280;
+}
+
+.empty-state-message {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #d1d5db;
+}
+
+.empty-state-hint {
+  font-size: 0.875rem;
+  margin: 0;
+  color: #9ca3af;
+}
