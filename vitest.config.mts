@@ -9,20 +9,35 @@ export default defineConfig(({ mode }) => ({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['src/test-setup.ts'],
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['src/**/*.spec.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['html', 'text-summary', 'lcov', 'text', 'json'],
       exclude: [
         'node_modules/',
         'src/test-setup.ts',
+        'src/testing/**/*.ts',
+        '**/*.spec.ts',
         '**/*.config.ts',
         '**/*.d.ts',
         '**/index.ts',
+        '**/main.ts',
       ],
+      thresholds: {
+        statements: 90,
+        branches: 85,
+        functions: 90,
+        lines: 90,
+      },
     },
   },
   define: {
     'import.meta.vitest': undefined,
+  },
+  resolve: {
+    alias: {
+      '@testing': '/src/testing',
+      '@app': '/src/app',
+    },
   },
 }));
