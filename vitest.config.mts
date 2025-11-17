@@ -27,5 +27,6 @@ export default defineConfig(({ mode }) => ({
     },
     optimizeDeps: {
       include: ['@angular/core', '@angular/core/testing', '@angular/common/testing', '@angular/platform-browser/testing'],
+      globals: ['@angular/core'],
     },
   }));
