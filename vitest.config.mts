@@ -14,9 +14,6 @@ export default defineConfig(({ mode }) => ({
     include: ['src/**/*.spec.ts'],
     esm: true,
   },
-  transform: {
-    exclude: ['node_modules'],
-  },
   define: {
     'import.meta.vitest': undefined,
   },
@@ -27,7 +24,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ['@angular/core/testing', '@angular/common/testing', '@angular/platform-browser/testing'],
+    include: ['@angular/core', '@angular/core/testing', '@angular/common/testing', '@angular/platform-browser/testing'],
   },
   ssr: {
     noExternal: true,
