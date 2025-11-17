@@ -17,11 +17,13 @@ export default defineConfig(({ mode }) => ({
   define: {
     'import.meta.vitest': undefined,
   },
-  resolve: {
-    alias: {
-      '@testing': '/src/testing',
-      '@app': '/src/app',
+    resolve: {
+      alias: {
+        '@testing': '/src/testing',
+        '@app': '/src/app',
+      },
     },
-  },
-
-}));
+    optimizeDeps: {
+      include: ['@angular/core', '@angular/core/testing', '@angular/common/testing', '@angular/platform-browser/testing'],
+    },
+  }));
