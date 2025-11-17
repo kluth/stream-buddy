@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => ({
       inline: true,
       interopDefault: true,
       moduleDirectories: ['node_modules'],
+      fallbackCJS: true,
     },
   },
   define: {
