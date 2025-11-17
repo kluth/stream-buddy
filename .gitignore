@@ -26,3 +26,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# SSL certificates (generated locally)
+server.key
+server.crt
+
+# Docker volumes
+/recordings/

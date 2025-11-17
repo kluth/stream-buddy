@@ -1,0 +1,53 @@
+###############################################
+# Stream Buddy - MediaMTX Configuration
+###############################################
+
+# General settings
+logLevel: info
+logDestinations: [stdout]
+logFile: /dev/null
+
+# API settings
+api: yes
+apiAddress: :9997
+
+# WebRTC settings
+webrtc: yes
+webrtcAddress: :8889
+webrtcServerKey: server.key
+webrtcServerCert: server.crt
+webrtcAllowOrigin: '*'
+webrtcTrustedProxies: []
+webrtcICEServers2:
+  - urls: [stun:stun.l.google.com:19302]
+
+# RTMP settings
+rtmp: yes
+rtmpAddress: :1935
+rtmpEncryption: "no"
+
+# HLS settings (optional, for testing)
+hls: yes
+hlsAddress: :8888
+hlsAllowOrigin: '*'
+
+# Path settings (streams)
+paths:
+  # Default path - accepts WebRTC input
+  all_others:
+    # Source (WebRTC input via WHIP)
+    source: publisher
+
+    # Allow WebRTC publishing
+    sourceOnDemand: no
+
+    # Recording (optional)
+    record: no
+    recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S.mp4
+
+  # Example: Multi-destination output path
+  # live:
+  #   runOnPublish: |
+  #     ffmpeg -i rtsp://localhost:$RTSP_PORT/$MTX_PATH
+  #       -c:v copy -c:a aac -b:a 128k -f flv rtmp://live.twitch.tv/app/{STREAM_KEY}
+  #       -c:v copy -c:a aac -b:a 128k -f flv rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}
