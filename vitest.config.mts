@@ -29,4 +29,7 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: ['@angular/core/testing', '@angular/common/testing', '@angular/platform-browser/testing'],
   },
+  ssr: {
+    noExternal: true,
+  },
 }));
