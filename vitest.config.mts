@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => ({
     environment: 'jsdom',
     setupFiles: ['src/test-setup.ts'],
     include: ['src/**/*.spec.ts'],
+    transformMode: {
+      web: [/node_modules/],
+    },
   },
   define: {
     'import.meta.vitest': undefined,
