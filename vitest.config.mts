@@ -40,14 +40,7 @@ export default defineConfig(({ mode }) => ({
     ],
     interopDefault: true,
   },
-  // Add this section to explicitly optimize these modules for the web environment
-  // This can help with ESM/CommonJS interoperability issues
-  // For more details, see: https://vitest.dev/config/#deps-optimizer
   deps: {
-    optimizer: {
-      web: {
-        include: ['jsdom', 'parse5', '@angular/core'],
-      },
-    },
+    inline: ['jsdom', 'parse5', '@angular/core'],
   },
 }));
