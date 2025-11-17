@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => ({
     deps: {
       inline: true,
       interopDefault: true,
+      moduleDirectories: ['node_modules'],
     },
   },
   define: {
