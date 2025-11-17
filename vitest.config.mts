@@ -21,6 +21,9 @@ export default defineConfig(({ mode }) => ({
       interopDefault: true,
       moduleDirectories: ['node_modules'],
       fallbackCJS: true,
+      optimizer: {
+        enabled: false,
+      },
     },
   },
   define: {
