@@ -4,6 +4,36 @@ import { WEBRTC_GATEWAY_CONFIG } from './webrtc-gateway.config';
 import type { ConnectionState } from '../models/webrtc-gateway.types';
 import * as helpers from './webrtc-gateway.helpers';
 
+async function simulateSuccessfulConnection(
+  peerConnection: jasmine.SpyObj<RTCPeerConnection>,
+  offer: RTCSessionDescriptionInit,
+  gatewayService: WebRTCGatewayService,
+  stream: MediaStream
+) {
+  // Simulate ICE gathering complete
+  Object.defineProperty(peerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
+  Object.defineProperty(peerConnection, 'localDescription', { value: offer, configurable: true });
+
+  const iceGatheringHandler = (peerConnection.addEventListener as jasmine.Spy).calls
+    .all()
+    .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
+  if (iceGatheringHandler) {
+    iceGatheringHandler();
+  }
+
+  // Simulate connection
+  Object.defineProperty(peerConnection, 'connectionState', { value: 'connected', configurable: true });
+  const connectionHandler = (peerConnection.addEventListener as jasmine.Spy).calls
+    .all()
+    .find(call => call.args[0] === 'connectionstatechange')?.args[1];
+  if (connectionHandler) {
+    connectionHandler();
+  }
+
+  // Wait for the connection to be established
+  await gatewayService.createConnection(stream);
+}
+
 describe('WebRTCGatewayService', () => {
   let service: WebRTCGatewayService;
   let mockPeerConnection: jasmine.SpyObj<RTCPeerConnection>;
@@ -152,115 +182,28 @@ describe('WebRTCGatewayService', () => {
     });
 
     it('should call forceCodecPreferences with correct preferences', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       expect(forceCodecPreferencesSpy).toHaveBeenCalledWith(jasmine.any(RTCPeerConnection), mockConfig.codecPreferences);
     });
 
     it('should set connectionState to "connecting" when starting', async () => {
       const connectionPromise = service.createConnection(mockMediaStream);
-
       expect(service.connectionState()).toBe('connecting');
       expect(service.isConnecting()).toBe(true);
-
-      // Simulate ICE gathering complete
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-
-      // Trigger ICE gathering state change
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      // Simulate connection
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       await connectionPromise;
     });
 
     it('should store the current stream', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       expect(service.currentStream()).toBe(mockMediaStream);
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
     });
 
     it('should create RTCPeerConnection with default ICE servers', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       expect(window.RTCPeerConnection).toHaveBeenCalledWith({
         iceServers: mockConfig.iceServers
       });
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
     });
 
     it('should create RTCPeerConnection with custom ICE servers', async () => {
@@ -277,136 +220,30 @@ describe('WebRTCGatewayService', () => {
         iceServers: customConfig.iceServers
       });
 
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       await connectionPromise;
     });
 
     it('should add all tracks from stream to peer connection', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       expect(mockPeerConnection.addTrack).toHaveBeenCalledTimes(2);
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
     });
 
     it('should create SDP offer with correct options', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       expect(mockPeerConnection.createOffer).toHaveBeenCalledWith({
         offerToReceiveAudio: false,
         offerToReceiveVideo: false
       });
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
     });
 
     it('should set local description', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       expect(mockPeerConnection.setLocalDescription).toHaveBeenCalledWith(mockOffer);
     });
 
     it('should negotiate with WHIP endpoint using default URL', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       expect(window.fetch).toHaveBeenCalledWith(
         'http://localhost:8889/live/whip',
         {
@@ -423,26 +260,7 @@ describe('WebRTCGatewayService', () => {
       };
 
       const connectionPromise = service.createConnection(mockMediaStream, customConfig);
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       await connectionPromise;
 
       expect(window.fetch).toHaveBeenCalledWith(
@@ -455,29 +273,7 @@ describe('WebRTCGatewayService', () => {
     });
 
     it('should set remote description with WHIP answer', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       expect(mockPeerConnection.setRemoteDescription).toHaveBeenCalledWith(
         jasmine.objectContaining({
           type: 'answer',
@@ -487,30 +283,7 @@ describe('WebRTCGatewayService', () => {
     });
 
     it('should set connectionState to "connected" on success', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
-      // Simulate ICE gathering complete
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      // Simulate connection
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       expect(service.connectionState()).toBe('connected');
       expect(service.isConnected()).toBe(true);
     });
@@ -566,28 +339,7 @@ describe('WebRTCGatewayService', () => {
 
     it('should close existing connection before creating new one', async () => {
       // First connection
-      const connectionPromise1 = service.createConnection(mockMediaStream);
-
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      let iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      let connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise1;
-
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
       const firstPeerConnection = mockPeerConnection;
 
       // Reset mocks for second connection
@@ -623,34 +375,14 @@ describe('WebRTCGatewayService', () => {
       mockPeerConnection.getStats.and.returnValue(Promise.resolve(new Map()));
 
       // Second connection
-      const connectionPromise2 = service.createConnection(mockMediaStream);
+      await simulateSuccessfulConnection(mockPeerConnection, mockOffer, service, mockMediaStream);
 
       expect(firstPeerConnection.close).toHaveBeenCalled();
-
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise2;
     });
   });
 
   describe('closeConnection()', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockPeerConnection.createOffer.and.returnValue(
         Promise.resolve({ type: 'offer', sdp: 'mock-sdp-offer' })
       );
@@ -662,144 +394,39 @@ describe('WebRTCGatewayService', () => {
       window.fetch = jasmine.createSpy('fetch').and.returnValue(
         Promise.resolve(new Response('mock-sdp-answer', { status: 201 }))
       );
+
+      await simulateSuccessfulConnection(mockPeerConnection, { type: 'offer', sdp: 'mock-sdp-offer' }, service, mockMediaStream);
     });
 
-    it('should close peer connection', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', {
-        value: { type: 'offer', sdp: 'mock-sdp-offer' },
-        configurable: true
-      });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
-
+    it('should close peer connection', () => {
       service.closeConnection();
-
       expect(mockPeerConnection.close).toHaveBeenCalled();
     });
 
-    it('should set connectionState to "closed"', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', {
-        value: { type: 'offer', sdp: 'mock-sdp-offer' },
-        configurable: true
-      });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
-
+    it('should set connectionState to "closed"', () => {
       service.closeConnection();
-
       expect(service.connectionState()).toBe('closed');
     });
 
-    it('should clear current stream', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', {
-        value: { type: 'offer', sdp: 'mock-sdp-offer' },
-        configurable: true
-      });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
-
+    it('should clear current stream', () => {
       service.closeConnection();
-
       expect(service.currentStream()).toBeNull();
     });
 
-    it('should clear metrics', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
-      // Simulate ICE gathering complete and connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', {
-        value: { type: 'offer', sdp: 'mock-sdp-offer' },
-        configurable: true
-      });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
-
+    it('should clear metrics', () => {
       service.closeConnection();
-
       expect(service.metrics()).toBeNull();
     });
 
     it('should handle closing when no connection exists', () => {
+      service.closeConnection();
       expect(() => service.closeConnection()).not.toThrow();
       expect(service.connectionState()).toBe('closed');
     });
   });
 
   describe('connection state management', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockPeerConnection.createOffer.and.returnValue(
         Promise.resolve({ type: 'offer', sdp: 'mock-sdp-offer' })
       );
@@ -811,35 +438,11 @@ describe('WebRTCGatewayService', () => {
       window.fetch = jasmine.createSpy('fetch').and.returnValue(
         Promise.resolve(new Response('mock-sdp-answer', { status: 201 }))
       );
+
+      await simulateSuccessfulConnection(mockPeerConnection, { type: 'offer', sdp: 'mock-sdp-offer' }, service, mockMediaStream);
     });
 
-    it('should update state to "disconnected" when connection drops', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
-      // Simulate ICE gathering complete and initial connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', {
-        value: { type: 'offer', sdp: 'mock-sdp-offer' },
-        configurable: true
-      });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      let connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
-
+    it('should update state to "disconnected" when connection drops', () => {
       // Simulate disconnection
       Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'disconnected', configurable: true });
 
@@ -851,33 +454,7 @@ describe('WebRTCGatewayService', () => {
       expect(service.connectionState()).toBe('disconnected');
     });
 
-    it('should update state to "failed" when connection fails', async () => {
-      const connectionPromise = service.createConnection(mockMediaStream);
-
-      // Simulate ICE gathering complete and initial connection
-      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
-      Object.defineProperty(mockPeerConnection, 'localDescription', {
-        value: { type: 'offer', sdp: 'mock-sdp-offer' },
-        configurable: true
-      });
-      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
-
-      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
-      if (iceGatheringHandler) {
-        iceGatheringHandler();
-      }
-
-      let connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
-        .all()
-        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
-      if (connectionHandler) {
-        connectionHandler();
-      }
-
-      await connectionPromise;
-
+    it('should update state to "failed" when connection fails', () => {
       // Simulate failure
       Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'failed', configurable: true });
 

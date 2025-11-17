@@ -18,8 +18,8 @@ export interface WebRTCGatewayConfig {
 export interface ConnectionMetrics {
   readonly connectionTime: number;
   readonly iceCandidatesGathered: number;
-  readonly bytesReceived: number;
-  readonly bytesSent: number;
+  readonly sendBandwidth: number;
+  readonly receiveBandwidth: number;
   readonly packetsLost: number;
   readonly roundTripTime: number;
 }
@@ -59,6 +59,9 @@ export class WebRTCGatewayService {
   private connectionStartTime: number = 0;
   private iceCandidateCount: number = 0;
   private metricsIntervalId: number | null = null;
+  private previousBytesSent: number = 0;
+  private previousBytesReceived: number = 0;
+  private lastMetricsCollectionTime: number = 0;
 
   constructor() {
     // Cleanup on service destruction
@@ -183,10 +186,10 @@ export class WebRTCGatewayService {
     pc.onicecandidate = (event) => this.handleICECandidate(event);
     pc.onconnectionstatechange = () => this.handleConnectionStateChange(pc);
     pc.onicegatheringstatechange = () => {
-      console.log('ICE gathering state:', pc.iceGatheringState);
+      ('ICE gathering state:', pc.iceGatheringState);
     };
     pc.oniceconnectionstatechange = () => {
-      console.log('ICE connection state:', pc.iceConnectionState);
+      ('ICE connection state:', pc.iceConnectionState);
     };
 
     return pc;
@@ -195,24 +198,24 @@ export class WebRTCGatewayService {
   private handleICECandidate(event: RTCPeerConnectionIceEvent): void {
     if (event.candidate) {
       this.iceCandidateCount++;
-      console.log('ICE candidate gathered:', event.candidate.candidate);
+      ('ICE candidate gathered:', event.candidate.candidate);
 
       // Note: With WHIP, ICE candidates are sent in the initial SDP offer
       // No trickle ICE is used
     } else {
-      console.log('ICE gathering complete');
+      ('ICE gathering complete');
     }
   }
 
   private handleConnectionStateChange(pc: RTCPeerConnection): void {
     const state = pc.connectionState;
-    console.log('Connection state changed:', state);
+    ('Connection state changed:', state);
 
     switch (state) {
       case 'connected':
         this._connectionState.set('connected');
         const connectionTime = Date.now() - this.connectionStartTime;
-        console.log(`Connection established in ${connectionTime}ms`);
+        (`Connection established in ${connectionTime}ms`);
         break;
 
       case 'disconnected':
@@ -236,6 +239,7 @@ export class WebRTCGatewayService {
   }
 
   private startMetricsCollection(pc: RTCPeerConnection): void {
+    this.lastMetricsCollectionTime = Date.now();
     this.metricsIntervalId = window.setInterval(async () => {
       if (!this.peerConnection || this.peerConnection.connectionState !== 'connected') {
         if (this.metricsIntervalId !== null) {
@@ -252,6 +256,8 @@ export class WebRTCGatewayService {
 
   private async collectMetrics(pc: RTCPeerConnection): Promise<ConnectionMetrics> {
     const stats = await pc.getStats();
+    const now = Date.now();
+    const elapsed = now - this.lastMetricsCollectionTime;
 
     let bytesReceived = 0;
     let bytesSent = 0;
@@ -273,11 +279,18 @@ export class WebRTCGatewayService {
       }
     });
 
+    const sendBandwidth = (bytesSent - this.previousBytesSent) / elapsed * 1000 * 8;
+    const receiveBandwidth = (bytesReceived - this.previousBytesReceived) / elapsed * 1000 * 8;
+
+    this.previousBytesSent = bytesSent;
+    this.previousBytesReceived = bytesReceived;
+    this.lastMetricsCollectionTime = now;
+
     return {
-      connectionTime: Date.now() - this.connectionStartTime,
+      connectionTime: now - this.connectionStartTime,
       iceCandidatesGathered: this.iceCandidateCount,
-      bytesReceived,
-      bytesSent,
+      sendBandwidth,
+      receiveBandwidth,
       packetsLost,
       roundTripTime: roundTripTime * 1000 // Convert to ms
     };

@@ -70,15 +70,23 @@ export async function waitForICEGatheringComplete(
     }
 
     const timeoutId = setTimeout(() => {
+      pc.removeEventListener('icegatheringstatechange', listener);
       reject(new Error('ICE gathering timeout'));
     }, timeout);
 
-    pc.addEventListener('icegatheringstatechange', () => {
+    const listener = () => {
       if (pc.iceGatheringState === 'complete') {
         clearTimeout(timeoutId);
+        pc.removeEventListener('icegatheringstatechange', listener);
         resolve();
+      } else if (pc.iceGatheringState === 'failed') {
+        clearTimeout(timeoutId);
+        pc.removeEventListener('icegatheringstatechange', listener);
+        reject(new Error('ICE gathering failed'));
       }
-    }, { once: true });
+    };
+
+    pc.addEventListener('icegatheringstatechange', listener);
   });
 }
 
@@ -93,6 +101,7 @@ export async function waitForConnection(
     }
 
     const timeoutId = setTimeout(() => {
+      pc.removeEventListener('connectionstatechange', checkState);
       reject(new Error(`Connection timeout after ${timeout}ms`));
     }, timeout);
 
