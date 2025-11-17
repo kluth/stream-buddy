@@ -16,6 +16,9 @@ export default defineConfig(({ mode }) => ({
       web: [/node_modules/],
     },
     esm: true,
+    deps: {
+      inline: true,
+    },
   },
   define: {
     'import.meta.vitest': undefined,
