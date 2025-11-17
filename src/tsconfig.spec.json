@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "../out-tsc/spec",
     "types": ["vitest/globals", "node"],
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "globals": true
   },
   "include": ["**/*.spec.ts", "**/*.d.ts"]
 }
