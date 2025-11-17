@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@angular/build": "^20.3.10",
-    "@angular/compiler": "^20.3.12"
+    "@angular/compiler": "^20.3.12",
+    "jsdom": "^27.2.0"
   }
 }
