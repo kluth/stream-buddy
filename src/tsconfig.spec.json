@@ -4,7 +4,8 @@
     "outDir": "../out-tsc/spec",
     "types": ["vitest/globals", "node"],
     "allowSyntheticDefaultImports": true,
-    "globals": true
+    "globals": true,
+    "module": "ESNext"
   },
   "include": ["**/*.spec.ts", "**/*.d.ts"]
 }
