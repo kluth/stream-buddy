@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => ({
     transformMode: {
       web: [/node_modules/],
     },
+    esm: true,
   },
   define: {
     'import.meta.vitest': undefined,
