@@ -35,6 +35,9 @@ export default defineConfig(({ mode }) => ({
       '@angular/common/testing',
       '@angular/platform-browser/testing',
       '@angular/platform-browser-dynamic/testing',
+      'jsdom',
+      'parse5',
     ],
+    interopDefault: true,
   },
 }));
