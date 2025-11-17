@@ -13,9 +13,8 @@ export default defineConfig(({ mode }) => ({
     setupFiles: ['src/test-setup.ts'],
     include: ['src/**/*.spec.ts'],
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
-    deps: {
-      moduleDirectories: ['node_modules'],
-      fallbackCJS: true,
+    transformMode: {
+      web: [/jsdom/, /parse5/, /@angular\/core/],
     },
   },
   define: {
