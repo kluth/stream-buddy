@@ -12,5 +12,8 @@
     "typescript": "^5.8.0",
     "vite": "^7.2.2",
     "vitest": "^4.0.10"
+  },
+  "devDependencies": {
+    "@angular/build": "^20.3.10"
   }
 }
