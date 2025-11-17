@@ -15,11 +15,7 @@ export default defineConfig(({ mode }) => ({
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
     server: {
       deps: {
-        optimizer: {
-          web: {
-            include: ['jsdom', 'parse5', '@angular/core'],
-          },
-        },
+        external: ['jsdom', 'parse5', '@angular/core'],
       },
     },
   },
