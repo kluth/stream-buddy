@@ -13,9 +13,13 @@ export default defineConfig(({ mode }) => ({
     setupFiles: ['src/test-setup.ts'],
     include: ['src/**/*.spec.ts'],
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
-    browser: {
-      moduleResolution: {
-        type: 'node',
+    server: {
+      deps: {
+        optimizer: {
+          web: {
+            include: ['jsdom', 'parse5', '@angular/core'],
+          },
+        },
       },
     },
   },
