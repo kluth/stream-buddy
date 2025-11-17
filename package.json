@@ -1,0 +1,12 @@
+{
+  "name": "stream-buddy",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@analogjs/vite-plugin-angular": "latest",
+    "@angular/compiler-cli": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  }
+}

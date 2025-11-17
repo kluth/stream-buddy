@@ -1,5 +1,12 @@
 import { Injectable, signal, computed, inject, DestroyRef } from '@angular/core';
 import type { ConnectionState } from '../models/webrtc-gateway.types';
+import {
+  negotiateWithWHIP,
+  forceCodecPreferences,
+  waitForICEGatheringComplete,
+  waitForConnection,
+} from './webrtc-gateway.helpers';
+import { WEBRTC_GATEWAY_CONFIG } from './webrtc-gateway.config';
 
 export interface WebRTCGatewayConfig {
   readonly whipUrl: string;
@@ -22,6 +29,7 @@ export interface ConnectionMetrics {
 })
 export class WebRTCGatewayService {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly config = inject(WEBRTC_GATEWAY_CONFIG);
 
   // Reactive state
   private readonly _connectionState = signal<ConnectionState>('new');
@@ -52,16 +60,6 @@ export class WebRTCGatewayService {
   private iceCandidateCount: number = 0;
   private metricsIntervalId: number | null = null;
 
-  // Default configuration
-  private readonly defaultConfig: WebRTCGatewayConfig = {
-    whipUrl: 'http://localhost:8889/live/whip',
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' }
-    ],
-    codecPreferences: ['video/H264', 'audio/opus'],
-    connectionTimeout: 10000 // 10 seconds
-  };
-
   constructor() {
     // Cleanup on service destruction
     this.destroyRef.onDestroy(() => {
@@ -78,7 +76,7 @@ export class WebRTCGatewayService {
 
     // 2. Merge configuration
     const finalConfig: WebRTCGatewayConfig = {
-      ...this.defaultConfig,
+      ...this.config,
       ...config
     };
 
@@ -104,10 +102,10 @@ export class WebRTCGatewayService {
       await pc.setLocalDescription(offer);
 
       // 7. Wait for ICE gathering complete (with timeout)
-      await this.waitForICEGatheringComplete(pc, 5000);
+      await waitForICEGatheringComplete(pc, 5000);
 
       // 8. Negotiate with WHIP endpoint
-      const answer = await this.negotiateWithWHIP(
+      const answer = await negotiateWithWHIP(
         pc.localDescription!,
         finalConfig.whipUrl
       );
@@ -116,7 +114,7 @@ export class WebRTCGatewayService {
       await pc.setRemoteDescription(answer);
 
       // 10. Wait for connection with timeout
-      await this.waitForConnection(pc, finalConfig.connectionTimeout!);
+      await waitForConnection(pc, finalConfig.connectionTimeout!);
 
       // 11. Update state
       this._connectionState.set('connected');
@@ -178,7 +176,7 @@ export class WebRTCGatewayService {
 
     // 3. Force codec preferences (H.264 for video, Opus for audio)
     if (config.codecPreferences) {
-      this.forceCodecPreferences(pc, config.codecPreferences);
+      forceCodecPreferences(pc, config.codecPreferences);
     }
 
     // 4. Setup event handlers
@@ -192,74 +190,6 @@ export class WebRTCGatewayService {
     };
 
     return pc;
-  }
-
-  private async negotiateWithWHIP(
-    offer: RTCSessionDescriptionInit,
-    whipUrl: string
-  ): Promise<RTCSessionDescription> {
-    // 1. Send SDP offer to WHIP endpoint
-    const response = await fetch(whipUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/sdp'
-      },
-      body: offer.sdp
-    });
-
-    // 2. Check response status
-    if (!response.ok) {
-      throw new Error(
-        `WHIP negotiation failed: ${response.status} ${response.statusText}`
-      );
-    }
-
-    // 3. Parse SDP answer
-    const answerSDP = await response.text();
-
-    // 4. Create RTCSessionDescription
-    return new RTCSessionDescription({
-      type: 'answer',
-      sdp: answerSDP
-    });
-  }
-
-  private forceCodecPreferences(
-    pc: RTCPeerConnection,
-    preferences: readonly string[]
-  ): void {
-    const transceivers = pc.getTransceivers();
-
-    transceivers.forEach(transceiver => {
-      const kind = transceiver.sender.track?.kind;
-
-      if (!kind) return;
-
-      // Get supported codecs
-      const capabilities = RTCRtpSender.getCapabilities(kind);
-      if (!capabilities) return;
-
-      // Filter codecs based on preferences
-      const preferredCodecs = capabilities.codecs.filter(codec => {
-        const mimeType = codec.mimeType.toLowerCase();
-
-        if (kind === 'video') {
-          // Force H.264 baseline profile for video
-          return mimeType.includes('h264') &&
-                 codec.sdpFmtpLine?.includes('profile-level-id=42e01f');
-        } else if (kind === 'audio') {
-          // Prefer Opus for audio
-          return mimeType.includes('opus');
-        }
-
-        return false;
-      });
-
-      // Set codec preferences
-      if (preferredCodecs.length > 0) {
-        transceiver.setCodecPreferences(preferredCodecs);
-      }
-    });
   }
 
   private handleICECandidate(event: RTCPeerConnectionIceEvent): void {
@@ -351,58 +281,5 @@ export class WebRTCGatewayService {
       packetsLost,
       roundTripTime: roundTripTime * 1000 // Convert to ms
     };
-  }
-
-  private async waitForICEGatheringComplete(
-    pc: RTCPeerConnection,
-    timeout: number
-  ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (pc.iceGatheringState === 'complete') {
-        resolve();
-        return;
-      }
-
-      const timeoutId = setTimeout(() => {
-        reject(new Error('ICE gathering timeout'));
-      }, timeout);
-
-      pc.addEventListener('icegatheringstatechange', () => {
-        if (pc.iceGatheringState === 'complete') {
-          clearTimeout(timeoutId);
-          resolve();
-        }
-      }, { once: true });
-    });
-  }
-
-  private async waitForConnection(
-    pc: RTCPeerConnection,
-    timeout: number
-  ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (pc.connectionState === 'connected') {
-        resolve();
-        return;
-      }
-
-      const timeoutId = setTimeout(() => {
-        reject(new Error(`Connection timeout after ${timeout}ms`));
-      }, timeout);
-
-      const checkState = () => {
-        if (pc.connectionState === 'connected') {
-          clearTimeout(timeoutId);
-          pc.removeEventListener('connectionstatechange', checkState);
-          resolve();
-        } else if (pc.connectionState === 'failed') {
-          clearTimeout(timeoutId);
-          pc.removeEventListener('connectionstatechange', checkState);
-          reject(new Error('Connection failed'));
-        }
-      };
-
-      pc.addEventListener('connectionstatechange', checkState);
-    });
   }
 }

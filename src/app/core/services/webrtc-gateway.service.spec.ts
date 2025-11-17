@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { WebRTCGatewayService, type WebRTCGatewayConfig, type ConnectionMetrics } from './webrtc-gateway.service';
+import { WEBRTC_GATEWAY_CONFIG } from './webrtc-gateway.config';
 import type { ConnectionState } from '../models/webrtc-gateway.types';
+import * as helpers from './webrtc-gateway.helpers';
 
 describe('WebRTCGatewayService', () => {
   let service: WebRTCGatewayService;
@@ -8,6 +10,14 @@ describe('WebRTCGatewayService', () => {
   let mockMediaStream: jasmine.SpyObj<MediaStream>;
   let originalRTCPeerConnection: typeof RTCPeerConnection;
   let originalFetch: typeof fetch;
+  let forceCodecPreferencesSpy: jasmine.Spy;
+
+  const mockConfig: WebRTCGatewayConfig = {
+    whipUrl: 'http://localhost:8889/live/whip',
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    codecPreferences: ['video/H264', 'audio/opus'],
+    connectionTimeout: 10000
+  };
 
   beforeEach(() => {
     // Save original globals
@@ -67,8 +77,14 @@ describe('WebRTCGatewayService', () => {
       headerExtensions: []
     });
 
+    // Spy on helper functions
+    forceCodecPreferencesSpy = spyOn(helpers, 'forceCodecPreferences').and.callThrough();
+
     TestBed.configureTestingModule({
-      providers: [WebRTCGatewayService]
+      providers: [
+        WebRTCGatewayService,
+        { provide: WEBRTC_GATEWAY_CONFIG, useValue: mockConfig }
+      ]
     });
 
     service = TestBed.inject(WebRTCGatewayService);
@@ -135,6 +151,32 @@ describe('WebRTCGatewayService', () => {
       );
     });
 
+    it('should call forceCodecPreferences with correct preferences', async () => {
+      const connectionPromise = service.createConnection(mockMediaStream);
+
+      // Simulate ICE gathering complete and connection
+      Object.defineProperty(mockPeerConnection, 'iceGatheringState', { value: 'complete', configurable: true });
+      Object.defineProperty(mockPeerConnection, 'localDescription', { value: mockOffer, configurable: true });
+      Object.defineProperty(mockPeerConnection, 'connectionState', { value: 'connected', configurable: true });
+
+      const iceGatheringHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
+        .all()
+        .find(call => call.args[0] === 'icegatheringstatechange')?.args[1];
+      if (iceGatheringHandler) {
+        iceGatheringHandler();
+      }
+
+      const connectionHandler = (mockPeerConnection.addEventListener as jasmine.Spy).calls
+        .all()
+        .find(call => call.args[0] === 'connectionstatechange')?.args[1];
+      if (connectionHandler) {
+        connectionHandler();
+      }
+
+      await connectionPromise;
+      expect(forceCodecPreferencesSpy).toHaveBeenCalledWith(jasmine.any(RTCPeerConnection), mockConfig.codecPreferences);
+    });
+
     it('should set connectionState to "connecting" when starting', async () => {
       const connectionPromise = service.createConnection(mockMediaStream);
 
@@ -196,7 +238,7 @@ describe('WebRTCGatewayService', () => {
       const connectionPromise = service.createConnection(mockMediaStream);
 
       expect(window.RTCPeerConnection).toHaveBeenCalledWith({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        iceServers: mockConfig.iceServers
       });
 
       // Simulate ICE gathering complete and connection
