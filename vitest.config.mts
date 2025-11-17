@@ -40,4 +40,7 @@ export default defineConfig(({ mode }) => ({
     ],
     interopDefault: true,
   },
+  ssr: {
+    noExternal: ['jsdom', 'parse5', '@angular/core'],
+  },
 }));
