@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => ({
     include: ['src/**/*.spec.ts'],
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
     deps: {
-      inline: ['jsdom', 'parse5', '@angular/core'],
+      moduleDirectories: ['node_modules'],
     },
   },
   define: {
