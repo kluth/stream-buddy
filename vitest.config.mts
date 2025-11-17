@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => ({
         '@angular/core/testing': '@angular/core/fesm2022/testing.mjs',
         '@angular/common/testing': '@angular/common/fesm2022/testing.mjs',
         '@angular/platform-browser/testing': '@angular/platform-browser/fesm2022/testing.mjs',
+        '@angular/platform-browser-dynamic/testing': '@angular/platform-browser-dynamic/fesm2022/testing.mjs',
       },
     },
     optimizeDeps: {
