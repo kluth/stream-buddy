@@ -157,6 +157,7 @@ export class WebRTCGatewayService {
     this._connectionState.set('closed');
     this._currentStream.set(null);
     this._metrics.set(null);
+    this._error.set(null);
 
     // 5. Reset counters
     this.connectionStartTime = 0;
