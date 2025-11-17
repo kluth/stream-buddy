@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { signal, computed } from '@angular/core/rxjs-interop';
+import { signal, computed } from '@angular/core';
 
 // Import and register custom matchers
 import './signal-matchers';
