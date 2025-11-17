@@ -13,8 +13,8 @@ export default defineConfig(({ mode }) => ({
     setupFiles: ['src/test-setup.ts'],
     include: ['src/**/*.spec.ts'],
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
-    transformMode: {
-      web: [/jsdom/, /parse5/, /@angular\/core/],
+    server: {
+      external: ['jsdom', 'parse5', '@angular/core'],
     },
   },
   define: {
