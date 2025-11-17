@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => ({
     esm: true,
     deps: {
       inline: true,
+      interopDefault: true,
     },
   },
   define: {
