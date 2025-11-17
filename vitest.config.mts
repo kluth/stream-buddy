@@ -40,7 +40,9 @@ export default defineConfig(({ mode }) => ({
     ],
     interopDefault: true,
   },
-  deps: {
-    inline: ['jsdom', 'parse5', '@angular/core'],
+  server: {
+    deps: {
+      inline: ['jsdom', 'parse5', '@angular/core'],
+    },
   },
 }));
