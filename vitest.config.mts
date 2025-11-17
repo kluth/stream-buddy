@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => ({
       alias: {
         '@testing': '/src/testing',
         '@app': '/src/app',
+        '@angular/core': '@angular/core/fesm2022/core.mjs',
       },
     },
     optimizeDeps: {
