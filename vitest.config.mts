@@ -16,15 +16,6 @@ export default defineConfig(({ mode }) => ({
       web: [/node_modules/],
     },
     esm: true,
-    deps: {
-      inline: true,
-      interopDefault: true,
-      moduleDirectories: ['node_modules'],
-      fallbackCJS: true,
-      optimizer: {
-        enabled: false,
-      },
-    },
   },
   define: {
     'import.meta.vitest': undefined,
@@ -34,5 +25,8 @@ export default defineConfig(({ mode }) => ({
       '@testing': '/src/testing',
       '@app': '/src/app',
     },
+  },
+  optimizeDeps: {
+    include: ['@angular/core/testing', '@angular/common/testing', '@angular/platform-browser/testing'],
   },
 }));
