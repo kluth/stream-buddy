@@ -16,4 +16,10 @@ export default defineConfig(({ mode }) => ({
   define: {
     'import.meta.vitest': undefined,
   },
+  resolve: {
+    alias: {
+      '@testing': '/src/testing',
+      '@app': '/src/app',
+    },
+  },
 }));
