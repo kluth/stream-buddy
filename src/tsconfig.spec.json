@@ -3,9 +3,12 @@
   "compilerOptions": {
     "outDir": "../out-tsc/spec",
     "types": ["vitest/globals", "node"],
-    "allowSyntheticDefaultImports": true,
-    "globals": true,
-    "module": "ESNext"
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es2020",
+    "lib": ["es2020", "dom"]
   },
-  "include": ["**/*.spec.ts", "**/*.d.ts"]
+  "include": ["**/*.spec.ts", "**/*.d.ts"],
+  "files": ["src/test-setup.ts"]
 }
