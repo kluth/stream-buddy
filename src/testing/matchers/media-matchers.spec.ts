@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createMockMediaStream, createMockMediaStreamTrack } from '../mocks';
+import { createMockMediaStream } from '../mocks/media-stream.mock';
+import { createMockMediaStreamTrack } from '../mocks/media-track.mock';
 
 // Import and register custom matchers
 import './media-matchers';

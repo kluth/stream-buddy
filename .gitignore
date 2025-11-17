@@ -33,3 +33,5 @@ server.crt
 
 # Docker volumes
 /recordings/
+
+/dist
