@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: stream-buddy-mediamtx
+    restart: unless-stopped
+
+    ports:
+      # WebRTC WHIP ingestion
+      - "8889:8889/tcp"
+      - "8889:8889/udp"
+
+      # RTMP output
+      - "1935:1935"
+
+      # HTTP API
+      - "9997:9997"
+
+    volumes:
+      # Mount custom configuration
+      - ./mediamtx.yml:/mediamtx.yml:ro
+
+      # Optional: persistent recordings
+      - ./recordings:/recordings
+
+    environment:
+      - MTX_LOGLEVEL=info
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9997/v3/config/get"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    networks:
+      - stream-buddy-network
+
+networks:
+  stream-buddy-network:
+    driver: bridge
