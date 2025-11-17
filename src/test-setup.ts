@@ -3,18 +3,9 @@
 // This file will be executed before running tests
 // Use it to setup global test utilities, mocks, and custom matchers
 
-// Initialize Angular test environment
-import { getTestBed } from '@angular/core/testing';
-import {
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting,
-} from '@angular/platform-browser-dynamic/testing';
-
-// Initialize Angular testing environment (zoneless)
-import { provideZonelessChangeDetection } from '@angular/core';
-
 // Import JSDOM for browser environment simulation
 import { JSDOM } from 'jsdom';
+import { vi } from 'vitest';
 
 // Setup JSDOM
 const dom = new JSDOM('<!doctype html><html><body></body></html>', {
@@ -103,6 +94,16 @@ class MockMediaStream implements MediaStream {
 
 global.MediaStream = MockMediaStream as unknown as typeof MediaStream;
 global.MediaStreamTrack = MockMediaStreamTrack as unknown as typeof MediaStreamTrack;
+
+// Initialize Angular test environment
+import { getTestBed } from '@angular/core/testing';
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting,
+} from '@angular/platform-browser-dynamic/testing';
+
+// Initialize Angular testing environment (zoneless)
+import { provideZonelessChangeDetection } from '@angular/core';
 
 // Only initialize once
 try {
