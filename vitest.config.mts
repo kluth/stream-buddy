@@ -4,10 +4,7 @@ import analog from '@analogjs/vite-plugin-angular';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [analog({
-    tsconfig: 'src/tsconfig.spec.json',
-    include: ['src/**/*.spec.ts', 'src/**/*.d.ts']
-  })],
+  plugins: [],
   test: {
     globals: true,
     environment: 'jsdom',
