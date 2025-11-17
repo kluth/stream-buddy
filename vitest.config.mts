@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => ({
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
     deps: {
       moduleDirectories: ['node_modules'],
+      fallbackCJS: true,
     },
   },
   define: {
