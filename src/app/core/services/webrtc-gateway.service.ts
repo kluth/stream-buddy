@@ -187,10 +187,10 @@ export class WebRTCGatewayService {
     pc.onicecandidate = (event) => this.handleICECandidate(event);
     pc.onconnectionstatechange = () => this.handleConnectionStateChange(pc);
     pc.onicegatheringstatechange = () => {
-      ('ICE gathering state:', pc.iceGatheringState);
+      // State is handled by waitForICEGatheringComplete
     };
     pc.oniceconnectionstatechange = () => {
-      ('ICE connection state:', pc.iceConnectionState);
+      // State is handled by handleConnectionStateChange
     };
 
     return pc;
