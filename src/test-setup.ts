@@ -13,29 +13,55 @@ import {
 // Initialize Angular testing environment (zoneless)
 import { provideZonelessChangeDetection } from '@angular/core';
 
-// Only initialize once
-try {
-  getTestBed().initTestEnvironment(
-    BrowserDynamicTestingModule,
-    platformBrowserDynamicTesting(),
-    {
-      errorOnUnknownElements: true,
-      errorOnUnknownProperties: true,
-    }
-  );
-} catch (error) {
-  // Already initialized, ignore
+// Import JSDOM for browser environment simulation
+import { JSDOM } from 'jsdom';
+
+// Setup JSDOM
+const dom = new JSDOM('<!doctype html><html><body></body></html>', {
+  url: 'http://localhost',
+});
+global.window = dom.window as unknown as Window & typeof globalThis;
+global.document = dom.window.document;
+global.navigator = dom.window.navigator;
+global.HTMLElement = dom.window.HTMLElement;
+global.Event = dom.window.Event;
+
+// Mock MediaStream and MediaStreamTrack for testing
+class MockMediaStreamTrack implements MediaStreamTrack {
+  id = crypto.randomUUID();
+  kind = 'video';
+  label = 'Mock Camera';
+  enabled = true;
+  muted = false;
+  readyState: 'live' | 'ended' = 'live';
+
+  stop = vi.fn();
+  clone = vi.fn();
+  getSettings = vi.fn(() => ({}) as MediaTrackSettings);
+  getCapabilities = vi.fn(() => ({}) as MediaTrackCapabilities);
+  getConstraints = vi.fn(() => ({}) as MediaTrackConstraints);
+  applyConstraints = vi.fn(() => Promise.resolve());
+  addEventListener = vi.fn();
+  removeEventListener = vi.fn();
+  dispatchEvent = vi.fn(() => true);
+
+  constructor(config: Partial<MediaStreamTrack> = {}) {
+    Object.assign(this, config);
+  }
 }
 
-// Register custom matchers
-import './testing/matchers';
-
-// Mock MediaStream API for testing (not available in jsdom)
 class MockMediaStream implements MediaStream {
   id = crypto.randomUUID();
   active = true;
-
   private tracks: MediaStreamTrack[] = [];
+
+  constructor(config: { videoTracks?: Partial<MediaStreamTrack>[], audioTracks?: Partial<MediaStreamTrack>[] } = {}) {
+    const { videoTracks = [], audioTracks = [] } = config;
+    this.tracks = [
+      ...videoTracks.map(tc => new MockMediaStreamTrack({ ...tc, kind: 'video' })),
+      ...audioTracks.map(tc => new MockMediaStreamTrack({ ...tc, kind: 'audio' })),
+    ];
+  }
 
   getTracks(): MediaStreamTrack[] {
     return this.tracks;
@@ -75,10 +101,22 @@ class MockMediaStream implements MediaStream {
   onremovetrack = null;
 }
 
-// Make MediaStream available globally in test environment
-if (typeof global !== 'undefined') {
-  (global as typeof globalThis).MediaStream = MockMediaStream as unknown as typeof MediaStream;
+global.MediaStream = MockMediaStream as unknown as typeof MediaStream;
+global.MediaStreamTrack = MockMediaStreamTrack as unknown as typeof MediaStreamTrack;
+
+// Only initialize once
+try {
+  getTestBed().initTestEnvironment(
+    BrowserDynamicTestingModule,
+    platformBrowserDynamicTesting(),
+    {
+      errorOnUnknownElements: true,
+      errorOnUnknownProperties: true,
+    }
+  );
+} catch (error) {
+  // Already initialized, ignore
 }
-if (typeof window !== 'undefined') {
-  (window as typeof globalThis).MediaStream = MockMediaStream as unknown as typeof MediaStream;
-}
+
+// Register custom matchers
+import './testing/matchers';

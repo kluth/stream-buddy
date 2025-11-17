@@ -23,10 +23,5 @@ export default defineConfig(({ mode }) => ({
       '@app': '/src/app',
     },
   },
-  optimizeDeps: {
-    include: ['@angular/core', '@angular/core/testing', '@angular/common/testing', '@angular/platform-browser/testing'],
-  },
-  ssr: {
-    noExternal: true,
-  },
+
 }));
