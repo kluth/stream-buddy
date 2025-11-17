@@ -48,7 +48,7 @@ export function forceCodecPreferences(
     // Filter codecs based on preferences
     const preferredCodecs = capabilities.codecs.filter(codec => {
       return preferences.some(preference =>
-        codec.mimeType.toLowerCase().includes(preference.toLowerCase())
+        codec.mimeType.toLowerCase() === preference.toLowerCase()
       );
     });
 
