@@ -34,8 +34,7 @@ export interface SecurityContextCheck {
  *
  * if (!check.isSecure) {
  *   console.error(check.error);
- *   console.log(check.suggestion);
- * }
+  * }
  * ```
  */
 @Injectable({

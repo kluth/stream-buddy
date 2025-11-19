@@ -1,0 +1,141 @@
+import type { WebRTCGatewayConfig } from './webrtc-gateway.service';
+
+export async function negotiateWithWHIP(
+  offer: RTCSessionDescriptionInit,
+  whipUrl: string
+): Promise<RTCSessionDescription> {
+  // 1. Send SDP offer to WHIP endpoint
+  const response = await fetch(whipUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/sdp'
+    },
+    body: offer.sdp
+  });
+
+  // 2. Check response status
+  if (!response.ok) {
+    throw new Error(
+      `WHIP negotiation failed: ${response.status} ${response.statusText}`
+    );
+  }
+
+  // 3. Parse SDP answer
+  const answerSDP = await response.text();
+
+  // 4. Create RTCSessionDescription
+  return new RTCSessionDescription({
+    type: 'answer',
+    sdp: answerSDP
+  });
+}
+
+export function forceCodecPreferences(
+  pc: RTCPeerConnection,
+  preferences: readonly string[]
+): void {
+  const transceivers = pc.getTransceivers();
+
+  transceivers.forEach(transceiver => {
+    const kind = transceiver.sender.track?.kind;
+
+    if (!kind) return;
+
+    // Get supported codecs
+    const capabilities = RTCRtpSender.getCapabilities(kind);
+    if (!capabilities) return;
+
+    // Filter codecs based on preferences
+    const preferredCodecs = capabilities.codecs.filter(codec => {
+      return preferences.some(preference =>
+        codec.mimeType.toLowerCase() === preference.toLowerCase()
+      );
+    });
+
+    // Set codec preferences
+    if (preferredCodecs.length > 0) {
+      transceiver.setCodecPreferences(preferredCodecs);
+    }
+  });
+}
+
+export async function waitForICEGatheringComplete(
+  pc: RTCPeerConnection,
+  timeout: number
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (pc.iceGatheringState === 'complete') {
+      resolve();
+      return;
+    }
+
+    if (pc.iceGatheringState === 'failed') {
+      reject(new Error('ICE gathering failed'));
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      pc.removeEventListener('icegatheringstatechange', listener);
+      reject(new Error('ICE gathering timeout'));
+    }, timeout);
+
+    const listener = () => {
+      if (pc.iceGatheringState === 'complete') {
+        clearTimeout(timeoutId);
+        pc.removeEventListener('icegatheringstatechange', listener);
+        resolve();
+      } else if (pc.iceGatheringState === 'failed') {
+        clearTimeout(timeoutId);
+        pc.removeEventListener('icegatheringstatechange', listener);
+        reject(new Error('ICE gathering failed'));
+      }
+    };
+
+    pc.addEventListener('icegatheringstatechange', listener);
+  });
+}
+
+export async function waitForConnection(
+  pc: RTCPeerConnection,
+  timeout: number
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (pc.connectionState === 'connected') {
+      resolve();
+      return;
+    }
+
+    if (pc.connectionState === 'failed') {
+      reject(new Error('Connection failed'));
+      return;
+    }
+
+    if (pc.connectionState === 'closed') {
+      reject(new Error('Connection closed'));
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      pc.removeEventListener('connectionstatechange', checkState);
+      reject(new Error(`Connection timeout after ${timeout}ms`));
+    }, timeout);
+
+    const checkState = () => {
+      if (pc.connectionState === 'connected') {
+        clearTimeout(timeoutId);
+        pc.removeEventListener('connectionstatechange', checkState);
+        resolve();
+      } else if (pc.connectionState === 'failed') {
+        clearTimeout(timeoutId);
+        pc.removeEventListener('connectionstatechange', checkState);
+        reject(new Error('Connection failed'));
+      } else if (pc.connectionState === 'closed') {
+        clearTimeout(timeoutId);
+        pc.removeEventListener('connectionstatechange', checkState);
+        reject(new Error('Connection closed'));
+      }
+    };
+
+    pc.addEventListener('connectionstatechange', checkState);
+  });
+}
