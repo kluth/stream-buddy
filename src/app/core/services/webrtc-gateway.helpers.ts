@@ -69,6 +69,11 @@ export async function waitForICEGatheringComplete(
       return;
     }
 
+    if (pc.iceGatheringState === 'failed') {
+      reject(new Error('ICE gathering failed'));
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       pc.removeEventListener('icegatheringstatechange', listener);
       reject(new Error('ICE gathering timeout'));
@@ -100,6 +105,16 @@ export async function waitForConnection(
       return;
     }
 
+    if (pc.connectionState === 'failed') {
+      reject(new Error('Connection failed'));
+      return;
+    }
+
+    if (pc.connectionState === 'closed') {
+      reject(new Error('Connection closed'));
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       pc.removeEventListener('connectionstatechange', checkState);
       reject(new Error(`Connection timeout after ${timeout}ms`));
@@ -114,6 +129,10 @@ export async function waitForConnection(
         clearTimeout(timeoutId);
         pc.removeEventListener('connectionstatechange', checkState);
         reject(new Error('Connection failed'));
+      } else if (pc.connectionState === 'closed') {
+        clearTimeout(timeoutId);
+        pc.removeEventListener('connectionstatechange', checkState);
+        reject(new Error('Connection closed'));
       }
     };
 

@@ -61,10 +61,7 @@ Write-Host ""
 # Step 4: Generate certificate
 Write-Host "Generating SSL certificate for localhost..."
 try {
-    & mkcert -cert-file $CERT_FILE `
-             -key-file $KEY_FILE `
-             -ecdsa `
-             localhost 127.0.0.1 ::1
+    & mkcert -cert-file $CERT_FILE -key-file $KEY_FILE -ecdsa localhost 127.0.0.1 ::1
     Write-Host "✓ Certificate generated successfully" -ForegroundColor Green
 } catch {
     Write-Host "ERROR: Failed to generate certificate" -ForegroundColor Red

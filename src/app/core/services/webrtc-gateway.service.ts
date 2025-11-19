@@ -89,6 +89,8 @@ export class WebRTCGatewayService {
     this._error.set(null);
     this.connectionStartTime = Date.now();
     this.iceCandidateCount = 0;
+    this.previousBytesSent = 0;
+    this.previousBytesReceived = 0;
 
     try {
       // 4. Create peer connection
@@ -120,10 +122,12 @@ export class WebRTCGatewayService {
       await waitForConnection(pc, finalConfig.connectionTimeout!);
 
       // 11. Update state
-      this._connectionState.set('connected');
+      if (this.peerConnection === pc) {
+        this._connectionState.set('connected');
 
-      // 12. Start metrics collection
-      this.startMetricsCollection(pc);
+        // 12. Start metrics collection
+        this.startMetricsCollection(pc);
+      }
 
     } catch (error) {
       this._error.set(error as Error);
