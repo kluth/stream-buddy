@@ -1,0 +1,22 @@
+<div class="stream-stats-container" [class]="quality()">
+  @if (stats(); as s) {
+    <div class="stat-item">
+      <span class="label">Video</span>
+      <span class="value">{{ s.videoBitrate | number:'1.0-0' }} Kbps</span>
+    </div>
+    <div class="stat-item">
+      <span class="label">FPS</span>
+      <span class="value">{{ s.fps | number:'1.0-0' }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="label">Latency</span>
+      <span class="value">{{ s.networkLatency | number:'1.0-0' }} ms</span>
+    </div>
+    <div class="stat-item">
+      <span class="label">Dropped</span>
+      <span class="value">{{ s.dropRate | number:'1.1-1' }}%</span>
+    </div>
+  } @else {
+    <div class="loading">Waiting for stream...</div>
+  }
+</div>

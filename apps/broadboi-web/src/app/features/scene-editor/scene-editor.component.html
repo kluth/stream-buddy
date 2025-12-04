@@ -1,0 +1,83 @@
+<div class="editor-container">
+  <div class="toolbar">
+    <button (click)="addText()">Add Text</button>
+    <button (click)="addImage()">Add Image</button>
+    <div class="divider"></div>
+    <span>Scene: {{ currentScene().name }}</span>
+  </div>
+
+  <div class="workspace">
+    <div class="canvas-wrapper">
+      <canvas #previewCanvas 
+              [width]="currentScene().width" 
+              [height]="currentScene().height"
+              (mousedown)="onMouseDown($event)"
+              (mousemove)="onMouseMove($event)"
+              (mouseup)="onMouseUp()"
+              (mouseleave)="onMouseUp()">
+      </canvas>
+    </div>
+
+    <aside class="properties-panel">
+      <h3>Properties</h3>
+      @if (getSelectedElement(); as el) {
+        <div class="prop-group">
+          <label>ID</label>
+          <input type="text" [value]="el.id" disabled>
+        </div>
+
+        <div class="prop-group">
+          <label>X</label>
+          <input type="number" [ngModel]="el.x" (ngModelChange)="updateElementProperty('x', $event)">
+        </div>
+
+        <div class="prop-group">
+          <label>Y</label>
+          <input type="number" [ngModel]="el.y" (ngModelChange)="updateElementProperty('y', $event)">
+        </div>
+
+        <div class="prop-group">
+          <label>Width</label>
+          <input type="number" [ngModel]="el.width" (ngModelChange)="updateElementProperty('width', $event)">
+        </div>
+
+        <div class="prop-group">
+          <label>Height</label>
+          <input type="number" [ngModel]="el.height" (ngModelChange)="updateElementProperty('height', $event)">
+        </div>
+
+        <div class="prop-group">
+          <label>Z-Index</label>
+          <input type="number" [ngModel]="el.zIndex" (ngModelChange)="updateElementProperty('zIndex', $event)">
+        </div>
+
+        <!-- Text Specific -->
+        @if (el.text !== undefined) {
+          <div class="prop-group">
+            <label>Text</label>
+            <input type="text" [ngModel]="el.text" (ngModelChange)="updateElementProperty('text', $event)">
+          </div>
+          <div class="prop-group">
+            <label>Color</label>
+            <input type="color" [ngModel]="el.color" (ngModelChange)="updateElementProperty('color', $event)">
+          </div>
+          <div class="prop-group">
+            <label>Font Size</label>
+            <input type="number" [ngModel]="el.fontSize" (ngModelChange)="updateElementProperty('fontSize', $event)">
+          </div>
+        }
+
+        <!-- Image Specific -->
+        @if (el.imageUrl !== undefined) {
+          <div class="prop-group">
+            <label>Opacity</label>
+            <input type="range" min="0" max="1" step="0.1" [ngModel]="el.opacity" (ngModelChange)="updateElementProperty('opacity', $event)">
+          </div>
+        }
+
+      } @else {
+        <div class="empty-state">Select an element to edit properties</div>
+      }
+    </aside>
+  </div>
+</div>

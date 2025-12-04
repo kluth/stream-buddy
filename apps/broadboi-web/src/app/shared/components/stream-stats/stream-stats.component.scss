@@ -1,0 +1,41 @@
+.stream-stats-container {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  color: white;
+  font-family: monospace;
+  font-size: 0.9rem;
+  border-left: 4px solid #888;
+
+  &.good {
+    border-left-color: #4caf50;
+  }
+  &.fair {
+    border-left-color: #ffc107;
+  }
+  &.poor {
+    border-left-color: #f44336;
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .label {
+      font-size: 0.7rem;
+      opacity: 0.8;
+    }
+    
+    .value {
+      font-weight: bold;
+    }
+  }
+  
+  .loading {
+    opacity: 0.7;
+    font-style: italic;
+  }
+}
