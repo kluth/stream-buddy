@@ -15,15 +15,20 @@ Get up and running with Stream Buddy in minutes!
 git clone https://github.com/yourusername/stream-buddy.git
 cd stream-buddy
 
-# Install dependencies
+# Install dependencies (the .npmrc file handles peer dependency conflicts)
 npm install
 ```
+
+**Note:** If you see warnings about Node version, that's OK. The app requires Node 20.16+ (you may see warnings for 20.19+, but 20.16 works fine).
 
 ## Running the Backend API
 
 ```bash
 # Start the NestJS API server
-npx nx serve api
+npm run start:api
+
+# Or use Nx directly:
+# npx nx serve api
 
 # The API will be available at http://localhost:3000
 ```
@@ -35,15 +40,21 @@ npx nx serve api
 npx nx build core
 
 # Start the Angular frontend
-npx nx serve broadboi-web
+npm run start:web
+
+# Or use Nx directly:
+# npx nx serve broadboi-web
 
 # The UI will be available at http://localhost:4200
 ```
 
-**Note:** If you encounter TypeScript version conflicts, run:
-```bash
-npm install --legacy-peer-deps
-```
+**Convenient Scripts:**
+- `npm run start:api` - Start backend
+- `npm run start:web` - Start frontend
+- `npm run build:api` - Build backend for production
+- `npm run build:web` - Build frontend for production
+- `npm run lint` - Run linting
+- `npm run test` - Run tests
 
 ## Testing Features
 
