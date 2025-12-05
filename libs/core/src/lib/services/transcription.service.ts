@@ -311,7 +311,7 @@ export class TranscriptionService {
       const inputData = event.inputBuffer.getChannelData(0);
       // Convert Float32Array to Int16Array for most APIs
       const int16Data = this.float32ToInt16(inputData);
-      onAudioData(int16Data.buffer);
+      onAudioData(int16Data.buffer as ArrayBuffer);
     };
 
     source.connect(processor);

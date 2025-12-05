@@ -84,6 +84,8 @@ export type {
   SceneTemplate,
 } from './scene-composition.types';
 
+export * from './overlay.types';
+
 // Type Guards
 export {
   isMediaSourceType,

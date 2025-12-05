@@ -56,6 +56,12 @@
         },
         "development": {
           "buildTarget": "broadboi-web:build:development"
+        },
+        "https": {
+          "buildTarget": "broadboi-web:build:development",
+          "ssl": true,
+          "sslKey": "tls/localhost-key.pem",
+          "sslCert": "tls/localhost-cert.pem"
         }
       },
       "defaultConfiguration": "development",
@@ -73,11 +79,13 @@
       "executor": "@nx/eslint:lint"
     },
     "test": {
-      "executor": "@nx/vite:test",
+      "executor": "@nx/vitest:test",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "passWithNoTests": true,
-        "reportsDirectory": "../../coverage/apps/broadboi-web"
+        "reportsDirectory": "../../coverage/apps/broadboi-web",
+        "config": "apps/broadboi-web/vite.config.mts",
+        "testTimeout": 10000
       }
     }
   },

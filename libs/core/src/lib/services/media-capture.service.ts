@@ -176,14 +176,14 @@ export class MediaCaptureService {
    * });
    * ```
    */
-  async captureScreen(options: ScreenCaptureOptions): Promise<MediaSource> {
+  async captureScreen(options?: ScreenCaptureOptions): Promise<MediaSource> {
     const mediaConstraints: MediaStreamConstraints = {
       video: {
         width: { ideal: 1920 },
         height: { ideal: 1080 },
         frameRate: { ideal: 30 },
       },
-      audio: options.includeAudio,
+      audio: options?.includeAudio || false,
     };
 
     return this.captureMediaSource('screen', mediaConstraints, true);

@@ -22,6 +22,27 @@ export class YoutubeAuthService {
   }
 
   /**
+   * Gets an authenticated OAuth2 client for the user.
+   */
+  async getOAuth2Client(internalUserId: string): Promise<any> {
+    const tokens = await this.getTokens(internalUserId);
+    if (!tokens) {
+      throw new Error('No YouTube tokens found for user');
+    }
+
+    const oauth2Client = new google.auth.OAuth2(
+      this.clientId,
+      this.clientSecret,
+    );
+    oauth2Client.setCredentials({
+      access_token: tokens.accessToken,
+      refresh_token: tokens.refreshToken,
+    });
+
+    return oauth2Client;
+  }
+
+  /**
    * Retrieves the active YouTube live broadcast ID using REAL YouTube API.
    * @param {string} internalUserId - Our internal user ID.
    * @returns {Promise<string | undefined>} The active live broadcast ID, or undefined if not found.
@@ -103,7 +124,7 @@ export class YoutubeAuthService {
             title: data.title,
             description: data.description,
             categoryId: data.categoryId,
-          },
+          } as any,
         },
       });
 

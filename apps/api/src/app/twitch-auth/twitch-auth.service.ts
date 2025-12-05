@@ -157,6 +157,84 @@ export class TwitchAuthService {
   }
 
   /**
+   * Bans a user on Twitch.
+   */
+  async banUser(internalUserId: string, channelName: string, usernameToBan: string, reason: string): Promise<void> {
+    try {
+      const tokens = await this.getTokens(internalUserId);
+      if (!tokens) return;
+
+      const authProvider = new StaticAuthProvider(this.clientId, tokens.accessToken);
+      const apiClient = new ApiClient({ authProvider });
+
+      // Get IDs
+      const user = await apiClient.users.getUserByName(usernameToBan);
+      const channel = await apiClient.users.getUserByName(channelName);
+      
+      if (user && channel) {
+        await apiClient.moderation.banUser(channel.id, {
+          user: user.id,
+          reason: reason,
+        });
+      }
+    } catch (error) {
+      this.logger.error(`Failed to ban user: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Timeouts a user on Twitch.
+   */
+  async timeoutUser(internalUserId: string, channelName: string, usernameToTimeout: string, duration: number, reason: string): Promise<void> {
+    try {
+      const tokens = await this.getTokens(internalUserId);
+      if (!tokens) return;
+
+      const authProvider = new StaticAuthProvider(this.clientId, tokens.accessToken);
+      const apiClient = new ApiClient({ authProvider });
+
+      // Get IDs
+      const user = await apiClient.users.getUserByName(usernameToTimeout);
+      const channel = await apiClient.users.getUserByName(channelName);
+
+      if (user && channel) {
+        await apiClient.moderation.banUser(channel.id, {
+          user: user.id,
+          duration: duration,
+          reason: reason,
+        });
+      }
+    } catch (error) {
+      this.logger.error(`Failed to timeout user: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Deletes a message on Twitch.
+   */
+  async deleteMessage(internalUserId: string, channelName: string, messageId: string): Promise<void> {
+    try {
+      const tokens = await this.getTokens(internalUserId);
+      if (!tokens) return;
+
+      const authProvider = new StaticAuthProvider(this.clientId, tokens.accessToken);
+      const apiClient = new ApiClient({ authProvider });
+
+      // Get IDs
+      const channel = await apiClient.users.getUserByName(channelName);
+
+      if (channel) {
+        await apiClient.moderation.deleteChatMessages(channel.id, messageId);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to delete message: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
    * Saves or updates Twitch user tokens in the database.
    * @param {string} internalUserId - The internal user ID.
    * @param {object} tokens - The tokens object containing accessToken, refreshToken, expiresAt, scopes.

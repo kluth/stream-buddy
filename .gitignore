@@ -7,13 +7,32 @@
 /.angular/
 .angular/
 
+# Nx workspace
+.nx/
+.nx/cache
+
 # Node modules and dependency files
-/node_modules/
+node_modules/
 /package-lock.json
 /yarn.lock
+apps/*/node_modules/
+apps/*/package-lock.json
+backend/node_modules/
+
+# Build output
+apps/*/dist/
+libs/*/dist/
+*.js
+*.js.map
+!jest.config.js
+!jest.preset.js
+!*.config.js
+!vite.config.mts
 
 # Environment files
-/.env
+.env
+.env.local
+.env.*.local
 
 # Angular CLI and build artefacts
 /.angular-cli.json
@@ -21,15 +40,45 @@
 
 # TypeScript cache
 *.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
 # SSL certificates (generated locally)
 server.key
 server.crt
+*.pem
+tls/
 
 # Docker volumes
 /recordings/
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+data/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Load test results
+load-tests/results/
