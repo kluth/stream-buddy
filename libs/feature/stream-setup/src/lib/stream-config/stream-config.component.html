@@ -1,0 +1,63 @@
+<form [formGroup]="streamForm" class="stream-config-form">
+  <div class="form-group">
+    <label for="platform-select">Platform:</label>
+    <select id="platform-select" formControlName="platform">
+      @for (platform of platforms; track platform) {
+        <option [value]="platform">{{ platform | titlecase }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="title-input">Stream Title:</label>
+    <input id="title-input" type="text" formControlName="title" placeholder="My Awesome Stream">
+    @for (error of getControlErrors('title'); track error) {
+      <p class="error-message">{{ error }}</p>
+    }
+  </div>
+
+  <div class="form-group">
+    <label for="description-textarea">Description:</label>
+    <textarea id="description-textarea" formControlName="description" placeholder="What's happening in this stream?"></textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="aspect-ratio-select">Aspect Ratio:</label>
+    <select id="aspect-ratio-select" formControlName="aspectRatio">
+      @for (ratio of aspectRatios; track ratio) {
+        <option [value]="ratio">{{ ratio }}</option>
+      }
+    </select>
+    @for (error of getControlErrors('aspectRatio'); track error) {
+      <p class="error-message">{{ error }}</p>
+    }
+  </div>
+
+  <div class="form-group">
+    <label for="bitrate-input">Bitrate (Kbps):</label>
+    <input id="bitrate-input" type="number" formControlName="bitrateKbps" placeholder="4000">
+    @for (error of getControlErrors('bitrateKbps'); track error) {
+      <p class="error-message">{{ error }}</p>
+    }
+  </div>
+
+  <div class="form-group">
+    <label for="rtmp-url-input">RTMP URL:</label>
+    <input id="rtmp-url-input" type="text" formControlName="rtmpUrl" placeholder="rtmps://live.twitch.tv/app/">
+    @for (error of getControlErrors('rtmpUrl'); track error) {
+      <p class="error-message">{{ error }}</p>
+    }
+  </div>
+
+  <div class="form-group">
+    <label for="stream-key-input">Stream Key:</label>
+    <input id="stream-key-input" type="text" formControlName="streamKey" placeholder="sk_xxxx-xxxx-xxxx-xxxx">
+    @for (error of getControlErrors('streamKey'); track error) {
+      <p class="error-message">{{ error }}</p>
+    }
+  </div>
+
+  <!-- Debugging Form State -->
+  <!-- <pre>{{ streamForm.value | json }}</pre>
+  <pre>{{ streamForm.valid }}</pre> -->
+</form>

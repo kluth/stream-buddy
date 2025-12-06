@@ -1,0 +1,43 @@
+<div class="setup-container">
+  <h2>Stream Setup</h2>
+
+  <div class="section">
+    <h3>Stream Details</h3>
+    <lib-stream-config 
+      (configChange)="onStreamConfigChange($event)"
+      (formValid)="onStreamConfigValidityChange($event)">
+    </lib-stream-config>
+  </div>
+
+  <div class="section">
+    <h3>Audio Settings</h3>
+    
+    <div class="control-group">
+      <label>
+        <input type="checkbox" [ngModel]="echoCancellation()" (ngModelChange)="echoCancellation.set($event)">
+        Echo Cancellation
+      </label>
+      <p class="hint">Reduces feedback from speakers.</p>
+    </div>
+
+    <div class="control-group">
+      <label>
+        <input type="checkbox" [ngModel]="noiseSuppression()" (ngModelChange)="noiseSuppression.set($event)">
+        Noise Suppression
+      </label>
+      <p class="hint">Filters out background noise.</p>
+    </div>
+
+    <div class="control-group">
+      <label>
+        <input type="checkbox" [ngModel]="autoGainControl()" (ngModelChange)="autoGainControl.set($event)">
+        Auto Gain Control
+      </label>
+      <p class="hint">Automatically adjusts volume levels.</p>
+    </div>
+
+    <button (click)="toggleMicrophone()">
+      {{ (mediaService.hasActiveMicrophone() ) ? 'Restart Microphone' : 'Start Microphone' }}
+    </button>
+  </div>
+</div>
