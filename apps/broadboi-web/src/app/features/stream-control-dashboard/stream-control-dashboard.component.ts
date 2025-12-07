@@ -1,9 +1,21 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MediaCaptureService, AudioMixerService, StreamOrchestrationService } from '@broadboi/core';
-import { SceneCompositorService, StreamRecorderService, TranscriptionService } from '@broadboi/core';
-import { I18nService, TranslatePipe, SupportedLanguage } from '@broadboi/core';
+import { 
+  MediaCaptureService, 
+  AudioMixerService, 
+  StreamOrchestrationService,
+  SceneCompositorService, 
+  StreamRecorderService, 
+  TranscriptionService,
+  I18nService, 
+  TranslatePipe, 
+  SupportedLanguage,
+  VideoSourceService,
+  ImageSourceService,
+  SceneComposition, 
+  SceneSource
+} from '@broadboi/core';
 
 @Component({
   selector: 'app-stream-control-dashboard',
@@ -76,6 +88,17 @@ import { I18nService, TranslatePipe, SupportedLanguage } from '@broadboi/core';
             </button>
           </div>
 
+          <div class="file-inputs">
+             <label class="file-input-label">
+                📂 Add Video Source
+                <input type="file" accept="video/*" (change)="handleVideoUpload($event)" style="display: none">
+             </label>
+             <label class="file-input-label">
+                🖼️ Add Image Source
+                <input type="file" accept="image/*" (change)="handleImageUpload($event)" style="display: none">
+             </label>
+          </div>
+
           @if (cameraStream()) {
             <div class="media-preview">
               <video #cameraVideo autoplay muted [srcObject]="cameraStream()" class="preview-video"></video>
@@ -98,6 +121,24 @@ import { I18nService, TranslatePipe, SupportedLanguage } from '@broadboi/core';
             </button>
           </div>
 
+          <div class="source-list">
+             <h4>Active Sources in Scene:</h4>
+             @if (activeScene()) {
+                <ul>
+                   @for (source of activeScene()?.sources; track source.id) {
+                      <li>
+                        {{ source.type }} - {{ source.id.substring(0, 8) }}
+                        @if (source.type === 'video') {
+                           <button (click)="toggleVideoPlayback(source.sourceId)" class="small-btn">⏯️</button>
+                        }
+                      </li>
+                   }
+                </ul>
+             } @else {
+                <p class="hint">No scene active</p>
+             }
+          </div>
+
           @if (composedStream()) {
             <div class="media-preview">
               <video #composedVideo autoplay muted [srcObject]="composedStream()" class="preview-video"></video>
@@ -105,6 +146,7 @@ import { I18nService, TranslatePipe, SupportedLanguage } from '@broadboi/core';
             </div>
           }
         </section>
+
 
         <section class="control-section">
           <h2>⏺️ {{ 'dashboard.recording' | translate }}</h2>
@@ -524,6 +566,45 @@ import { I18nService, TranslatePipe, SupportedLanguage } from '@broadboi/core';
       font-size: 0.85em;
       color: #999;
     }
+    .file-input-label {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #4a4a4a;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+    .file-input-label:hover {
+      background: #5a5a5a;
+    }
+
+    .source-list {
+       margin-top: 15px;
+       background: #2a2a2a;
+       padding: 10px;
+       border-radius: 5px;
+    }
+
+    .source-list ul {
+       list-style: none;
+       padding: 0;
+    }
+
+    .source-list li {
+       padding: 5px 0;
+       border-bottom: 1px solid #444;
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+    }
+
+    .small-btn {
+       padding: 2px 5px;
+       font-size: 0.8em;
+    }
   `]
 })
 export class StreamControlDashboardComponent implements OnInit, OnDestroy {
@@ -535,6 +616,8 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
   private readonly transcriptionService = inject(TranscriptionService);
   private readonly streamOrchestrationService = inject(StreamOrchestrationService);
   private readonly i18n = inject(I18nService);
+  private readonly videoSourceService = inject(VideoSourceService);
+  private readonly imageSourceService = inject(ImageSourceService);
 
   // Media streams
   cameraStream = signal<MediaStream | null>(null);
@@ -544,6 +627,7 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
   // Compositor state
   composedStream = this.compositorService.composedOutputStream;
   currentFPS = this.compositorService.currentFPS;
+  activeScene = this.compositorService.activeComposition;
 
   // Recording state
   isRecording = this.recorderService.isRecording;
@@ -571,6 +655,8 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     console.log('🚀 Stream Control Dashboard initialized!');
+    // Initialize compositor on start
+    this.initializeCompositor();
   }
 
   ngOnDestroy() {
@@ -590,6 +676,9 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
         frameRate: 30,
       });
       this.cameraStream.set(source.stream);
+
+      // Register with compositor
+      this.compositorService.registerStreamSource('camera-1', source.stream);
 
       // Add to audio mixer
       if (source.stream.getAudioTracks().length > 0) {
@@ -625,15 +714,91 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
     try {
       const source = await this.mediaCaptureService.captureScreen();
       this.screenStream.set(source.stream);
+      this.compositorService.registerStreamSource('screen-1', source.stream);
       console.log('Screen capture started');
     } catch (error) {
       console.error('Failed to start screen capture:', error);
     }
   }
 
+  async handleVideoUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      try {
+        const video = await this.videoSourceService.createVideoSource(file, file.name);
+        // Auto-add to scene for demo
+        this.addSourceToScene({
+          id: `video-${Date.now()}` as any,
+          type: 'video',
+          sourceId: video.id as any,
+          x: 50,
+          y: 50,
+          width: 640,
+          height: 360,
+          zIndex: 2,
+          visible: true,
+          videoOptions: {
+            loop: true,
+            muted: false,
+            volume: 1,
+            playbackRate: 1
+          }
+        });
+        this.videoSourceService.play(video.id);
+      } catch (e) {
+        console.error('Failed to load video', e);
+      }
+    }
+  }
+
+  async handleImageUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      try {
+        const img = await this.imageSourceService.createImageSource(file, file.name);
+         this.addSourceToScene({
+          id: `image-${Date.now()}` as any,
+          type: 'image',
+          sourceId: img.id as any,
+          x: 100,
+          y: 100,
+          width: 400,
+          height: 300,
+          zIndex: 3,
+          visible: true
+        });
+      } catch (e) {
+        console.error('Failed to load image', e);
+      }
+    }
+  }
+
+  toggleVideoPlayback(id: any) {
+     const element = this.videoSourceService.getVideoElement(id);
+     if (element) {
+        if (element.paused) element.play();
+        else element.pause();
+     }
+  }
+
   async initializeCompositor() {
     try {
-      await this.compositorService.initialize(1920, 1080, 30);
+      await this.compositorService.initialize(1280, 720, 30); // 720p default for performance
+      // Create initial empty scene
+      const initialScene: SceneComposition = {
+         id: 'scene-1' as any,
+         name: 'Main Scene',
+         width: 1280,
+         height: 720,
+         backgroundColor: '#000000',
+         sources: [],
+         isActive: true,
+         createdAt: new Date(),
+         modifiedAt: new Date()
+      };
+      this.compositorService.setComposition(initialScene);
       console.log('Compositor initialized');
     } catch (error) {
       console.error('Failed to initialize compositor:', error);
@@ -641,13 +806,35 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
   }
 
   async addCameraToScene() {
-    // Implementation would add camera to compositor
-    console.log('Add camera to scene not yet fully implemented');
+    if (!this.cameraStream()) return;
+    this.addSourceToScene({
+       id: `cam-${Date.now()}` as any,
+       type: 'camera',
+       sourceId: 'camera-1' as any,
+       x: 0,
+       y: 0,
+       width: 1280,
+       height: 720,
+       zIndex: 1,
+       visible: true
+    });
+  }
+
+  private addSourceToScene(source: SceneSource) {
+     const currentScene = this.activeScene();
+     if (!currentScene) return;
+
+     const updatedScene: SceneComposition = {
+        ...currentScene,
+        sources: [...currentScene.sources, source]
+     };
+     this.compositorService.setComposition(updatedScene);
   }
 
   async testTransition() {
     console.log('Transition test not yet fully implemented');
   }
+
 
   async startRecording() {
     const stream = this.composedStream();

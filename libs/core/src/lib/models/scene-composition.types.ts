@@ -61,6 +61,11 @@ export interface SceneComposition {
 }
 
 /**
+ * Source type
+ */
+export type SceneSourceType = 'camera' | 'screen' | 'window' | 'video' | 'image' | 'browser';
+
+/**
  * Source within a scene (positioned media element)
  */
 export interface SceneSource {
@@ -70,9 +75,29 @@ export interface SceneSource {
   readonly id: SceneSourceId;
 
   /**
-   * Reference to MediaSource being displayed
+   * Type of source
    */
-  readonly sourceId: MediaSourceId;
+  readonly type: SceneSourceType;
+
+  /**
+   * Reference to MediaSource (for camera/screen) or File path/URL (for video/image)
+   */
+  readonly sourceId: MediaSourceId | string;
+
+  /**
+   * Optional label/name
+   */
+  readonly label?: string;
+
+  /**
+   * Video specific options
+   */
+  readonly videoOptions?: {
+    loop: boolean;
+    muted: boolean;
+    volume: number; // 0-1
+    playbackRate: number;
+  };
 
   /**
    * X position in pixels (top-left corner)

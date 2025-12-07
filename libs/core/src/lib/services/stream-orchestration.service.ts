@@ -107,7 +107,7 @@ export class StreamOrchestrationService {
     try {
       // 1. Initialize Scene Compositor
       this.sceneCompositorService.setComposition(scene);
-      mediaStreams.forEach(ms => this.sceneCompositorService.registerMediaStream(ms.id, ms.stream));
+      mediaStreams.forEach(ms => this.sceneCompositorService.registerStreamSource(ms.id, ms.stream));
 
       const canvasOutputStream = this.sceneCompositorService.outputStream();
       if (!canvasOutputStream) {

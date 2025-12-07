@@ -12,6 +12,8 @@ export * from './lib/services/scene-preset.service';
 export * from './lib/services/stream-orchestration.service';
 export * from './lib/services/stream-recorder.service';
 export * from './lib/services/transcription.service';
+export * from './lib/services/video-source.service';
+export * from './lib/services/image-source.service';
 export * from './lib/services/i18n.service';
 export * from './lib/pipes/translate.pipe';
 export * from './lib/guards/type-guards';

@@ -115,6 +115,7 @@ export class ScenePresetService {
           // Placeholder for camera
           {
               id: 'cam-1' as any,
+              type: 'camera',
               sourceId: 'camera-source' as any, // Placeholder
               x: 0, y: 0, width: 1920, height: 1080,
               zIndex: 1, visible: true

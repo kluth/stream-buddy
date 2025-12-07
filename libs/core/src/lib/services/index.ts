@@ -40,6 +40,8 @@ export * from './stream-orchestration.service';
 export * from './stream-recorder.service';
 export * from './stream-stats.service';
 export * from './transcription.service';
+export * from './video-source.service';
+export * from './image-source.service';
 export * from './virtual-camera.service';
 export * from './virtual-device.service';
 export * from './vod-chapters.service';

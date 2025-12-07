@@ -1,5 +1,7 @@
 import { Injectable, signal, inject, DestroyRef } from '@angular/core';
 import { SceneComposition, SceneSource, SceneTransform } from '../models/scene-composition.types';
+import { VideoSourceService } from './video-source.service';
+import { ImageSourceService } from './image-source.service';
 
 export interface TransitionConfig {
   type: 'fade' | 'cut' | 'slide' | 'wipe' | 'zoom' | 'custom';
@@ -13,14 +15,16 @@ export interface TransitionConfig {
 })
 export class SceneCompositorService {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly videoService = inject(VideoSourceService);
+  private readonly imageService = inject(ImageSourceService);
 
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private _outputStream: MediaStream | null = null;
   private animationFrameId: number | null = null;
 
-  // Media registry
-  private mediaRegistry = new Map<string, HTMLVideoElement | HTMLImageElement>();
+  // Media registry (for live streams like camera/screen)
+  private streamRegistry = new Map<string, HTMLVideoElement>();
 
   // Current composition state
   private currentComposition: SceneComposition | null = null;
@@ -97,14 +101,17 @@ export class SceneCompositorService {
     }
   }
 
-  registerMediaStream(id: string, stream: MediaStream): void {
+  /**
+   * Register a live media stream (camera, screen)
+   */
+  registerStreamSource(id: string, stream: MediaStream): void {
     const video = document.createElement('video');
     video.srcObject = stream;
     video.autoplay = true;
     video.muted = true;
     video.playsInline = true;
     video.play().catch(e => console.error(`Error playing video for ${id}:`, e));
-    this.mediaRegistry.set(id, video);
+    this.streamRegistry.set(id, video);
   }
 
   outputStream(): MediaStream | null {
@@ -170,7 +177,23 @@ export class SceneCompositorService {
   }
 
   private renderSource(ctx: CanvasRenderingContext2D, source: SceneSource): void {
-    const element = this.mediaRegistry.get(source.sourceId as string);
+    let element: HTMLVideoElement | HTMLImageElement | undefined;
+
+    // Resolve element based on source type
+    switch (source.type) {
+      case 'camera':
+      case 'screen':
+      case 'window':
+        element = this.streamRegistry.get(source.sourceId as string);
+        break;
+      case 'video':
+        element = this.videoService.getVideoElement(source.sourceId as string);
+        break;
+      case 'image':
+        element = this.imageService.getImageElement(source.sourceId as string);
+        break;
+    }
+
     if (!element) return;
 
     ctx.save();
@@ -183,13 +206,13 @@ export class SceneCompositorService {
     ctx.scale(transform.scaleX, transform.scaleY);
 
     try {
-       ctx.drawImage(
-          element,
-          -source.width / 2,
-          -source.height / 2,
-          source.width,
-          source.height
-        );
+      ctx.drawImage(
+        element,
+        -source.width / 2,
+        -source.height / 2,
+        source.width,
+        source.height
+      );
     } catch (error) {
       // Ignore rendering errors (e.g. if video not ready)
     }
@@ -238,6 +261,6 @@ export class SceneCompositorService {
     this.ctx = null;
     this._outputStream = null;
     this.currentComposition = null;
-    this.mediaRegistry.clear();
+    this.streamRegistry.clear();
   }
 }
