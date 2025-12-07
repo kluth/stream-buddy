@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { Subject } from 'rxjs';
+import { Parser } from 'expr-eval';
 
 /**
  * Automation Service
@@ -951,11 +952,84 @@ export class AutomationService {
     }
   }
 
-  private evaluateExpression(expression: string): any {
-    // Simplified expression evaluation
-    // In production, would use a safe expression evaluator
+  /**
+   * Safely evaluates a mathematical/logical expression using a sandboxed parser.
+   * This replaces the dangerous eval() function with expr-eval library.
+   *
+   * Supported operations:
+   * - Arithmetic: +, -, *, /, %, ^
+   * - Comparison: ==, !=, <, >, <=, >=
+   * - Logical: and, or, not
+   * - Functions: abs, ceil, floor, round, min, max, sqrt, etc.
+   * - Variables from global and macro context
+   *
+   * @param expression The expression string to evaluate
+   * @param context Optional context variables for the expression
+   * @returns The evaluated result or undefined if evaluation fails
+   */
+  private evaluateExpression(expression: string, context?: Record<string, any>): any {
+    // Security: Validate expression length to prevent DoS
+    const MAX_EXPRESSION_LENGTH = 1000;
+    if (!expression || expression.length > MAX_EXPRESSION_LENGTH) {
+      console.error('Expression evaluation failed: Expression is empty or too long');
+      return undefined;
+    }
+
+    // Security: Sanitize and validate the expression
+    // Block dangerous patterns that could indicate injection attempts
+    const dangerousPatterns = [
+      /\beval\b/i,
+      /\bFunction\b/i,
+      /\bconstructor\b/i,
+      /\b__proto__\b/i,
+      /\bprototype\b/i,
+      /\bprocess\b/i,
+      /\brequire\b/i,
+      /\bimport\b/i,
+      /\bexport\b/i,
+      /\bwindow\b/i,
+      /\bdocument\b/i,
+      /\bglobal\b/i,
+      /\bthis\b/i,
+    ];
+
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(expression)) {
+        console.error(`Expression evaluation blocked: Potentially dangerous pattern detected in "${expression}"`);
+        return undefined;
+      }
+    }
+
     try {
-      return eval(expression);
+      // Create a safe parser instance
+      const parser = new Parser();
+
+      // Build a context with global variables (only primitive values for safety)
+      const safeContext: Record<string, any> = {};
+
+      // Add global variables (sanitized)
+      const globalVars = this.globalVariables();
+      for (const [name, variable] of Object.entries(globalVars)) {
+        // Only allow primitive types in expression context
+        if (['string', 'number', 'boolean'].includes(typeof variable.value)) {
+          safeContext[name] = variable.value;
+        }
+      }
+
+      // Merge with provided context (also sanitized)
+      if (context) {
+        for (const [name, value] of Object.entries(context)) {
+          if (['string', 'number', 'boolean'].includes(typeof value)) {
+            safeContext[name] = value;
+          }
+        }
+      }
+
+      // Parse and evaluate the expression in a safe sandboxed environment
+      const parsedExpression = parser.parse(expression);
+      const result = parsedExpression.evaluate(safeContext);
+
+      return result;
     } catch (error) {
       console.error('Expression evaluation failed:', error);
       return undefined;

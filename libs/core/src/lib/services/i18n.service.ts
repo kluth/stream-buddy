@@ -98,7 +98,7 @@ export class I18nService {
   // Reactive state
   readonly config = signal<I18nConfig>(DEFAULT_CONFIG);
   readonly currentLanguage = signal<SupportedLanguage>('en');
-  readonly translations = signal<Record<SupportedLanguage, Translations>>({});
+  readonly translations = signal<Partial<Record<SupportedLanguage, Translations>>>({});
   readonly isLoading = signal<boolean>(false);
 
   // Computed
@@ -218,7 +218,7 @@ export class I18nService {
     this.translations.update(current => ({
       ...current,
       [language]: {
-        ...current[language],
+        ...(current[language] || {}),
         ...translations,
       },
     }));
@@ -449,6 +449,28 @@ export class I18nService {
           fps: 'FPS',
           quality: 'Quality',
         },
+        dashboard: {
+          title: 'BroadBoi Dashboard',
+          status: 'Status',
+          fps: 'FPS',
+          recording: 'Recording',
+          transcription: 'Transcription',
+          mediaSources: 'Media Sources',
+          sceneComposition: 'Scene Composition',
+          audioMixer: 'Audio Mixer',
+          streaming: 'Streaming',
+          live: 'LIVE',
+          offline: 'Offline',
+          rec: 'REC',
+          ready: 'Ready',
+          active: 'Active',
+          idle: 'Idle',
+          startCamera: 'Start Camera',
+          startMic: 'Start Microphone',
+          captureScreen: 'Capture Screen',
+          goLive: 'Go Live',
+          endStream: 'End Stream',
+        },
       },
       es: {
         common: {
@@ -478,6 +500,28 @@ export class I18nService {
           bitrate: 'Bitrate',
           fps: 'FPS',
           quality: 'Calidad',
+        },
+        dashboard: {
+          title: 'Panel BroadBoi',
+          status: 'Estado',
+          fps: 'FPS',
+          recording: 'Grabación',
+          transcription: 'Transcripción',
+          mediaSources: 'Fuentes Multimedia',
+          sceneComposition: 'Composición de Escena',
+          audioMixer: 'Mezclador de Audio',
+          streaming: 'Transmisión',
+          live: 'EN VIVO',
+          offline: 'Desconectado',
+          rec: 'GRAB',
+          ready: 'Listo',
+          active: 'Activo',
+          idle: 'Inactivo',
+          startCamera: 'Iniciar Cámara',
+          startMic: 'Iniciar Micrófono',
+          captureScreen: 'Capturar Pantalla',
+          goLive: 'Transmitir',
+          endStream: 'Terminar',
         },
       },
       fr: {

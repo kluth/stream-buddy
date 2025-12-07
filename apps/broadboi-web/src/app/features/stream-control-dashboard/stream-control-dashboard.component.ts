@@ -3,37 +3,59 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MediaCaptureService, AudioMixerService, StreamOrchestrationService } from '@broadboi/core';
 import { SceneCompositorService, StreamRecorderService, TranscriptionService } from '@broadboi/core';
+import { I18nService, TranslatePipe, SupportedLanguage } from '@broadboi/core';
 
 @Component({
   selector: 'app-stream-control-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
     <div class="stream-dashboard">
-      <h1>🎬 Stream Buddy - Ultimate Streaming Dashboard</h1>
+      <div class="header-row">
+        <h1>🎬 {{ 'dashboard.title' | translate }}</h1>
+        <div class="language-selector">
+          <select [ngModel]="currentLanguage()" (ngModelChange)="setLanguage($event)">
+            @for (lang of availableLanguages(); track lang.code) {
+              <option [value]="lang.code">{{ lang.flag }} {{ lang.nativeName }}</option>
+            }
+          </select>
+        </div>
+      </div>
 
       <!-- Quick Stats -->
       <div class="stats-bar">
         <div class="stat-card">
-          <div class="stat-label">Status</div>
+          <div class="stat-label">{{ 'dashboard.status' | translate }}</div>
           <div class="stat-value" [class.live]="isStreaming()">
-            {{ isStreaming() ? '🔴 LIVE' : '⚫ Offline' }}
+            @if (isStreaming()) {
+              🔴 {{ 'dashboard.live' | translate }}
+            } @else {
+              ⚫ {{ 'dashboard.offline' | translate }}
+            }
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">FPS</div>
+          <div class="stat-label">{{ 'dashboard.fps' | translate }}</div>
           <div class="stat-value">{{ currentFPS() }}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Recording</div>
+          <div class="stat-label">{{ 'dashboard.recording' | translate }}</div>
           <div class="stat-value" [class.recording]="isRecording()">
-            {{ isRecording() ? '⏺️ REC' : '⏸️ Ready' }}
+            @if (isRecording()) {
+              ⏺️ {{ 'dashboard.rec' | translate }}
+            } @else {
+              ⏸️ {{ 'dashboard.ready' | translate }}
+            }
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Transcription</div>
+          <div class="stat-label">{{ 'dashboard.transcription' | translate }}</div>
           <div class="stat-value" [class.active]="isTranscribing()">
-            {{ isTranscribing() ? '🎤 Active' : '💤 Idle' }}
+            @if (isTranscribing()) {
+              🎤 {{ 'dashboard.active' | translate }}
+            } @else {
+              💤 {{ 'dashboard.idle' | translate }}
+            }
           </div>
         </div>
       </div>
@@ -41,16 +63,16 @@ import { SceneCompositorService, StreamRecorderService, TranscriptionService } f
       <!-- Main Control Panel -->
       <div class="control-panel">
         <section class="control-section">
-          <h2>📹 Media Sources</h2>
+          <h2>📹 {{ 'dashboard.mediaSources' | translate }}</h2>
           <div class="button-group">
             <button (click)="startCamera()" [disabled]="cameraStream()">
-              🎥 Start Camera
+              🎥 {{ 'dashboard.startCamera' | translate }}
             </button>
             <button (click)="startMicrophone()" [disabled]="microphoneStream()">
-              🎤 Start Microphone
+              🎤 {{ 'dashboard.startMic' | translate }}
             </button>
             <button (click)="startScreen()">
-              🖥️ Capture Screen
+              🖥️ {{ 'dashboard.captureScreen' | translate }}
             </button>
           </div>
 
@@ -63,7 +85,7 @@ import { SceneCompositorService, StreamRecorderService, TranscriptionService } f
         </section>
 
         <section class="control-section">
-          <h2>🎨 Scene Composition</h2>
+          <h2>🎨 {{ 'dashboard.sceneComposition' | translate }}</h2>
           <div class="button-group">
             <button (click)="initializeCompositor()">
               ⚙️ Initialize Compositor
@@ -85,7 +107,7 @@ import { SceneCompositorService, StreamRecorderService, TranscriptionService } f
         </section>
 
         <section class="control-section">
-          <h2>⏺️ Recording</h2>
+          <h2>⏺️ {{ 'dashboard.recording' | translate }}</h2>
           <div class="button-group">
             @if (!isRecording()) {
               <button (click)="startRecording()" [disabled]="!composedStream()">
@@ -131,7 +153,7 @@ import { SceneCompositorService, StreamRecorderService, TranscriptionService } f
         </section>
 
         <section class="control-section">
-          <h2>🎤 Live Transcription</h2>
+          <h2>🎤 {{ 'dashboard.transcription' | translate }}</h2>
           <div class="button-group">
             @if (!isTranscribing()) {
               <button (click)="startTranscription()" [disabled]="!microphoneStream()">
@@ -164,7 +186,7 @@ import { SceneCompositorService, StreamRecorderService, TranscriptionService } f
         </section>
 
         <section class="control-section">
-          <h2>🎚️ Audio Mixer</h2>
+          <h2>🎚️ {{ 'dashboard.audioMixer' | translate }}</h2>
           <div class="audio-controls">
             @for (level of audioLevels(); track level.sourceId) {
               <div class="audio-level">
@@ -180,7 +202,7 @@ import { SceneCompositorService, StreamRecorderService, TranscriptionService } f
         </section>
 
         <section class="control-section">
-          <h2>🚀 Streaming</h2>
+          <h2>🚀 {{ 'dashboard.streaming' | translate }}</h2>
           <div class="platform-selection">
             <label>
               <input type="checkbox" (change)="togglePlatform('twitch', $event)">
@@ -195,11 +217,11 @@ import { SceneCompositorService, StreamRecorderService, TranscriptionService } f
           <div class="button-group">
             @if (!isStreaming()) {
               <button (click)="startStreaming()" [disabled]="selectedPlatforms().size === 0" class="primary">
-                🔴 Go Live
+                🔴 {{ 'dashboard.goLive' | translate }}
               </button>
             } @else {
               <button (click)="stopStreaming()" class="danger">
-                ⏹️ End Stream
+                ⏹️ {{ 'dashboard.endStream' | translate }}
               </button>
             }
           </div>
@@ -236,10 +258,30 @@ import { SceneCompositorService, StreamRecorderService, TranscriptionService } f
       margin: 0 auto;
     }
 
-    h1 {
-      text-align: center;
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 30px;
+    }
+
+    h1 {
+      margin: 0;
       font-size: 2.5em;
+    }
+
+    .language-selector select {
+      padding: 8px 12px;
+      border-radius: 4px;
+      background: #333;
+      color: white;
+      border: 1px solid #555;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .language-selector select:hover {
+      background: #444;
     }
 
     .stats-bar {
@@ -492,6 +534,7 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
   private readonly recorderService = inject(StreamRecorderService);
   private readonly transcriptionService = inject(TranscriptionService);
   private readonly streamOrchestrationService = inject(StreamOrchestrationService);
+  private readonly i18n = inject(I18nService);
 
   // Media streams
   cameraStream = signal<MediaStream | null>(null);
@@ -522,6 +565,10 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
   isStreaming = this.streamOrchestrationService.isStreaming;
   selectedPlatforms = signal<Set<string>>(new Set());
 
+  // I18n state
+  currentLanguage = this.i18n.currentLanguage;
+  availableLanguages = this.i18n.availableLanguages;
+
   ngOnInit() {
     console.log('🚀 Stream Control Dashboard initialized!');
   }
@@ -529,6 +576,10 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     // Cleanup
     this.stopAllStreams();
+  }
+
+  setLanguage(lang: SupportedLanguage) {
+    this.i18n.setLanguage(lang);
   }
 
   async startCamera() {

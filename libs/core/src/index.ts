@@ -1,7 +1,9 @@
 export * from './lib/models';
+export * from './lib/services/audio-dsp.service';
 export * from './lib/services/audio-mixer.service';
 export * from './lib/services/audio-processing.service';
 export * from './lib/services/chat-integration.service';
+export * from './lib/services/color-grading.service';
 export * from './lib/services/environment-detector.service';
 export * from './lib/services/media-capture.service';
 export * from './lib/services/overlay-renderer';
@@ -10,4 +12,6 @@ export * from './lib/services/scene-preset.service';
 export * from './lib/services/stream-orchestration.service';
 export * from './lib/services/stream-recorder.service';
 export * from './lib/services/transcription.service';
+export * from './lib/services/i18n.service';
+export * from './lib/pipes/translate.pipe';
 export * from './lib/guards/type-guards';

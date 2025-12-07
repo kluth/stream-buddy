@@ -472,7 +472,7 @@ export class CloudStorageService {
    * Process next upload in queue
    */
   private async processNextUpload(): Promise<void> {
-    const activeCount = this.activeUploads$.().length;
+    const activeCount = this.activeUploads$().length;
     const maxConcurrent = this.getMaxConcurrentUploads();
 
     if (activeCount >= maxConcurrent || this.uploadQueue.length === 0) {

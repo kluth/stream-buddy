@@ -16,6 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@broadboi/core": ["libs/core/src/index.ts"],
+      "@broadboi/core/services": ["libs/core/src/lib/services/index.ts"],
       "@broadboi/core/*": ["libs/core/src/*"]
     }
   },

@@ -515,7 +515,7 @@ export class VODChaptersService {
     // Auto-categorize chapters
     for (const chapter of limited) {
       if (!chapter.category) {
-        chapter.category = this.autoCateg categorizeChapter(chapter);
+        chapter.category = this.autoCategorizeChapter(chapter);
         chapter.color = CATEGORY_COLORS[chapter.category];
       }
     }
@@ -876,7 +876,7 @@ export class VODChaptersService {
   /**
    * Auto-categorize chapter
    */
-  private autoCategorizecategorizeChapter(chapter: Chapter): ChapterCategory {
+  private autoCategorizeChapter(chapter: Chapter): ChapterCategory {
     const title = chapter.title.toLowerCase();
 
     if (title.includes('intro') || chapter.startTime < 30000) {

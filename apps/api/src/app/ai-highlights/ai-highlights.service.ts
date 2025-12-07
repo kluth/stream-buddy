@@ -1,7 +1,150 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs/promises';
+
+/**
+ * Allowed protocols for stream URLs.
+ * Only rtmp, rtmps, http, and https are permitted to prevent SSRF attacks.
+ */
+const ALLOWED_STREAM_PROTOCOLS = ['rtmp:', 'rtmps:', 'http:', 'https:'];
+
+/**
+ * Allowed base directories for video file operations.
+ * Prevents arbitrary file read attacks by restricting paths to known safe directories.
+ */
+const ALLOWED_VIDEO_DIRECTORIES = [
+  '/tmp/clips',
+  '/tmp/videos',
+  '/var/lib/broadboi/videos',
+  '/var/lib/broadboi/recordings',
+];
+
+/**
+ * Pattern to detect suspicious characters that could be used for command injection
+ * or path traversal attacks.
+ */
+const SUSPICIOUS_PATTERN = /[;|&$`\\<>'"!\n\r\x00]/;
+
+/**
+ * Pattern to detect path traversal attempts.
+ */
+const PATH_TRAVERSAL_PATTERN = /\.\.[/\\]/;
+
+/**
+ * Validates a stream URL to ensure it uses an allowed protocol and contains no
+ * suspicious characters that could enable command injection or SSRF attacks.
+ *
+ * @param streamUrl - The URL to validate
+ * @returns The validated URL string
+ * @throws BadRequestException if the URL is invalid or uses a disallowed protocol
+ */
+function validateStreamUrl(streamUrl: string): string {
+  if (!streamUrl || typeof streamUrl !== 'string') {
+    throw new BadRequestException('Stream URL is required and must be a string');
+  }
+
+  // Check for suspicious characters that could enable command injection
+  if (SUSPICIOUS_PATTERN.test(streamUrl)) {
+    throw new BadRequestException('Stream URL contains invalid characters');
+  }
+
+  // Parse and validate the URL
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(streamUrl);
+  } catch {
+    throw new BadRequestException('Invalid stream URL format');
+  }
+
+  // Validate protocol is in allowlist
+  if (!ALLOWED_STREAM_PROTOCOLS.includes(parsedUrl.protocol)) {
+    throw new BadRequestException(
+      `Invalid stream protocol: ${parsedUrl.protocol}. Allowed protocols: ${ALLOWED_STREAM_PROTOCOLS.join(', ')}`
+    );
+  }
+
+  // Prevent localhost/internal network SSRF attacks
+  const hostname = parsedUrl.hostname.toLowerCase();
+  const internalPatterns = [
+    'localhost',
+    '127.0.0.1',
+    '0.0.0.0',
+    '::1',
+    '169.254.',        // Link-local
+    '10.',             // Private Class A
+    '192.168.',        // Private Class C
+    'metadata.google', // Cloud metadata endpoints
+    '169.254.169.254', // AWS/GCP metadata endpoint
+  ];
+
+  for (const pattern of internalPatterns) {
+    if (hostname === pattern || hostname.startsWith(pattern) || hostname.endsWith('.' + pattern)) {
+      throw new BadRequestException('Stream URL cannot point to internal or private network addresses');
+    }
+  }
+
+  // Check for private Class B addresses (172.16.0.0 - 172.31.255.255)
+  const ipv4Match = hostname.match(/^(\d+)\.(\d+)\./);
+  if (ipv4Match) {
+    const firstOctet = parseInt(ipv4Match[1], 10);
+    const secondOctet = parseInt(ipv4Match[2], 10);
+    if (firstOctet === 172 && secondOctet >= 16 && secondOctet <= 31) {
+      throw new BadRequestException('Stream URL cannot point to internal or private network addresses');
+    }
+  }
+
+  return streamUrl;
+}
+
+/**
+ * Sanitizes and validates a file path to ensure it is within allowed directories
+ * and does not contain path traversal or command injection attempts.
+ *
+ * @param filePath - The file path to sanitize
+ * @param allowedDirs - Optional custom list of allowed directories
+ * @returns The sanitized absolute path
+ * @throws BadRequestException if the path is invalid or outside allowed directories
+ */
+function sanitizePath(filePath: string, allowedDirs: string[] = ALLOWED_VIDEO_DIRECTORIES): string {
+  if (!filePath || typeof filePath !== 'string') {
+    throw new BadRequestException('File path is required and must be a string');
+  }
+
+  // Check for suspicious characters
+  if (SUSPICIOUS_PATTERN.test(filePath)) {
+    throw new BadRequestException('File path contains invalid characters');
+  }
+
+  // Check for path traversal patterns before normalization
+  if (PATH_TRAVERSAL_PATTERN.test(filePath)) {
+    throw new BadRequestException('Path traversal is not allowed');
+  }
+
+  // Normalize and resolve the path
+  const normalizedPath = path.resolve(filePath);
+
+  // Verify the normalized path is within an allowed directory
+  const isAllowed = allowedDirs.some(allowedDir => {
+    const normalizedAllowedDir = path.resolve(allowedDir);
+    return normalizedPath.startsWith(normalizedAllowedDir + path.sep) ||
+           normalizedPath === normalizedAllowedDir;
+  });
+
+  if (!isAllowed) {
+    throw new BadRequestException(
+      `File path must be within allowed directories: ${allowedDirs.join(', ')}`
+    );
+  }
+
+  // Additional check: ensure no path traversal after normalization
+  // This catches cases like /tmp/clips/../../../etc/passwd
+  if (normalizedPath !== filePath && PATH_TRAVERSAL_PATTERN.test(filePath)) {
+    throw new BadRequestException('Path traversal detected');
+  }
+
+  return normalizedPath;
+}
 
 export interface HighlightMoment {
   id: string;
