@@ -1,0 +1,305 @@
+<div class="stream-dashboard">
+  <div class="header-row">
+    <h1>🎬 {{ 'dashboard.title' | translate }}</h1>
+    <div class="language-selector">
+      <select [ngModel]="currentLanguage()" (ngModelChange)="setLanguage($event)">
+        @for (lang of availableLanguages(); track lang.code) {
+          <option [value]="lang.code">{{ lang.flag }} {{ lang.nativeName }}</option>
+        }
+      </select>
+      <button (click)="showDeck = !showDeck" class="deck-toggle">
+        📱 Stream Deck
+      </button>
+    </div>
+  </div>
+
+  @if (showDeck) {
+    <div class="deck-overlay">
+      <div class="deck-wrapper">
+        <button class="close-deck" (click)="showDeck = false">❌</button>
+        <broadboi-virtual-stream-deck></broadboi-virtual-stream-deck>
+      </div>
+    </div>
+  }
+
+  <!-- Quick Stats -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">{{ 'dashboard.status' | translate }}</div>
+      <div class="stat-value" [class.live]="isStreaming()">
+        @if (isStreaming()) {
+          🔴 {{ 'dashboard.live' | translate }}
+        } @else {
+          ⚫ {{ 'dashboard.offline' | translate }}
+        }
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">{{ 'dashboard.fps' | translate }}</div>
+      <div class="stat-value">{{ currentFPS() }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">{{ 'dashboard.recording' | translate }}</div>
+      <div class="stat-value" [class.recording]="isRecording()">
+        @if (isRecording()) {
+          ⏺️ {{ 'dashboard.rec' | translate }}
+        } @else {
+          ⏸️ {{ 'dashboard.ready' | translate }}
+        }
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">{{ 'dashboard.transcription' | translate }}</div>
+      <div class="stat-value" [class.active]="isTranscribing()">
+        @if (isTranscribing()) {
+          🎤 {{ 'dashboard.active' | translate }}
+        } @else {
+          💤 {{ 'dashboard.idle' | translate }}
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- VOD Editor Overlay -->
+  @if (isEditorActive()) {
+    <broadboi-vod-editor></broadboi-vod-editor>
+  }
+
+  <!-- Main Control Panel -->
+  <div class="control-panel">
+    <section class="control-section">
+      <h2>📹 {{ 'dashboard.mediaSources' | translate }}</h2>
+      <div class="button-group">
+        <button (click)="startCamera()" [disabled]="cameraStream()">
+          🎥 {{ 'dashboard.startCamera' | translate }}
+        </button>
+        <button (click)="startMicrophone()" [disabled]="microphoneStream()">
+          🎤 {{ 'dashboard.startMic' | translate }}
+        </button>
+        <button (click)="startScreen()">
+          🖥️ {{ 'dashboard.captureScreen' | translate }}
+        </button>
+      </div>
+
+      <div class="file-inputs">
+         <label class="file-input-label">
+            📂 Add Video Source
+            <input type="file" accept="video/*" (change)="handleVideoUpload($event)" style="display: none">
+         </label>
+         <label class="file-input-label">
+            🖼️ Add Image Source
+            <input type="file" accept="image/*" (change)="handleImageUpload($event)" style="display: none">
+         </label>
+         <button (click)="addBrowserSource()" class="file-input-label" style="border:none">
+            🌐 Add Browser Source
+         </button>
+         <label class="file-input-label" style="background: #E91E63">
+            ✂️ Edit Video (VOD)
+            <input type="file" accept="video/*" (change)="openVODEditor($event)" style="display: none">
+         </label>
+      </div>
+
+      @if (cameraStream()) {
+        <div class="media-preview">
+          <video #cameraVideo autoplay muted [srcObject]="cameraStream()" class="preview-video"></video>
+          <p>Camera Active</p>
+        </div>
+      }
+    </section>
+
+    <section class="control-section">
+      <h2>🎨 {{ 'dashboard.sceneComposition' | translate }}</h2>
+      <div class="button-group">
+        <button (click)="initializeCompositor()">
+          ⚙️ Initialize Compositor
+        </button>
+        <button (click)="addCameraToScene()" [disabled]="!cameraStream()">
+          ➕ Add Camera to Scene
+        </button>
+        <button (click)="testTransition()">
+          ✨ Test Transition
+        </button>
+      </div>
+
+      <div class="source-list">
+         <h4>Active Sources in Scene:</h4>
+         @if (activeScene()) {
+            <ul>
+               @for (source of activeScene()?.sources; track source.id) {
+                  <li>
+                    {{ source.type }} - {{ source.id.substring(0, 8) }}
+                    @if (source.type === 'video') {
+                       <button (click)="toggleVideoPlayback(source.sourceId)" class="small-btn">⏯️</button>
+                    }
+                  </li>
+               }
+               @for (bs of activeBrowserSources(); track bs.id) {
+                  <li>
+                    browser - {{ bs.name }}
+                    <button (click)="removeBrowserSource(bs.id)" class="small-btn danger">🗑️</button>
+                  </li>
+               }
+            </ul>
+         } @else {
+            <p class="hint">No scene active</p>
+         }
+      </div>
+
+      <div class="compositor-container" style="position: relative; width: 100%; max-width: 1280px; aspect-ratio: 16/9; background: black;">
+        <!-- Canvas Layer -->
+        <video #composedVideo autoplay muted [srcObject]="composedStream()" class="preview-video" style="width: 100%; height: 100%; position: absolute; top:0; left:0;"></video>
+        
+        <!-- Browser Source Overlay Layer -->
+         @for (source of activeBrowserSources(); track source.id) {
+           <!-- Scale position based on container vs actual canvas size logic needed here, simplifying for prototype -->
+           <broadboi-browser-source [source]="source"></broadboi-browser-source>
+         }
+      </div>
+      <p>Composed Output - FPS: {{ currentFPS() }}</p>
+    </section>
+
+
+    <section class="control-section">
+      <h2>⏺️ {{ 'dashboard.recording' | translate }}</h2>
+      <div class="button-group">
+        @if (!isRecording()) {
+          <button (click)="startRecording()" [disabled]="!composedStream()">
+            ⏺️ Start Recording
+          </button>
+        } @else {
+          <button (click)="stopRecording()" class="danger">
+            ⏹️ Stop Recording
+          </button>
+          <button (click)="pauseRecording()">
+            ⏸️ Pause
+          </button>
+        }
+      </div>
+
+      <div class="button-group">
+        @if (!replayBufferActive()) {
+          <button (click)="startReplayBuffer()" [disabled]="!composedStream()">
+            🔄 Enable Replay Buffer (30s)
+          </button>
+        } @else {
+          <button (click)="saveReplayBuffer()" class="highlight">
+            💾 Save Last 30 Seconds
+          </button>
+          <button (click)="stopReplayBuffer()">
+            ⏹️ Stop Buffer
+          </button>
+        }
+      </div>
+
+      @if (isRecording()) {
+        <div class="recording-info">
+          <p>📹 Recording: {{ formatDuration(recordingDuration()) }}</p>
+          <p>💾 Size: {{ formatFileSize(recordedSize()) }}</p>
+        </div>
+      }
+
+      @if (replayBufferActive()) {
+        <div class="buffer-info">
+          <p>🔄 Buffer: {{ formatDuration(replayBufferDuration()) }} / 30s</p>
+        </div>
+      }
+    </section>
+
+    <section class="control-section">
+      <h2>🎤 {{ 'dashboard.transcription' | translate }}</h2>
+      <div class="button-group">
+        @if (!isTranscribing()) {
+          <button (click)="startTranscription()" [disabled]="!microphoneStream()">
+            ▶️ Start Transcription
+          </button>
+        } @else {
+          <button (click)="stopTranscription()" class="danger">
+            ⏹️ Stop Transcription
+          </button>
+        }
+        <button (click)="exportTranscript('txt')">
+          📄 Export TXT
+        </button>
+        <button (click)="exportTranscript('srt')">
+          📝 Export SRT
+        </button>
+      </div>
+
+      <div class="transcription-output">
+        <h3>Current Transcript:</h3>
+        <div class="transcript-box">
+          {{ currentTranscript() || 'No transcription yet...' }}
+        </div>
+        @if (interimTranscript()) {
+          <div class="interim-transcript">
+            <em>{{ interimTranscript() }}</em>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="control-section">
+      <h2>🎚️ {{ 'dashboard.audioMixer' | translate }}</h2>
+      <div class="audio-controls">
+        @for (level of audioLevels(); track level.sourceId) {
+          <div class="audio-level">
+            <label>{{ level.sourceId }}</label>
+            <div class="level-meter">
+              <div class="level-bar" [style.width.%]="level.level"
+                   [class.clipping]="level.clipping"></div>
+            </div>
+            <span>{{ level.level }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="control-section">
+      <h2>🚀 {{ 'dashboard.streaming' | translate }}</h2>
+      <div class="platform-selection">
+        <label>
+          <input type="checkbox" (change)="togglePlatform('twitch', $event)">
+          Twitch
+        </label>
+        <label>
+          <input type="checkbox" (change)="togglePlatform('youtube', $event)">
+          YouTube
+        </label>
+      </div>
+
+      <div class="button-group">
+        @if (!isStreaming()) {
+          <button (click)="startStreaming()" [disabled]="selectedPlatforms().size === 0" class="primary">
+            🔴 {{ 'dashboard.goLive' | translate }}
+          </button>
+        } @else {
+          <button (click)="stopStreaming()" class="danger">
+            ⏹️ {{ 'dashboard.endStream' | translate }}
+          </button>
+        }
+      </div>
+    </section>
+  </div>
+
+  <!-- Recordings List -->
+  @if (recordings().length > 0) {
+    <section class="recordings-section">
+      <h2>📁 Recent Recordings</h2>
+      <div class="recordings-list">
+        @for (recording of recordings(); track recording.id) {
+          <div class="recording-card">
+            @if (recording.thumbnail) {
+              <img [src]="recording.thumbnail" alt="Thumbnail" class="recording-thumbnail">
+            }
+            <div class="recording-info">
+              <h4>{{ recording.fileName }}</h4>
+              <p>Duration: {{ formatDuration(recording.duration) }}</p>
+              <p>Size: {{ formatFileSize(recording.fileSize) }}</p>
+              <p>Date: {{ recording.startTime | date:'short' }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

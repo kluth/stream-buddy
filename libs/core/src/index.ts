@@ -19,5 +19,6 @@ export * from './lib/services/i18n.service';
 export * from './lib/components/browser-source/browser-source.component';
 export * from './lib/services/vod-editor.service';
 export * from './lib/components/vod-editor/vod-editor.component';
+export * from './lib/components/virtual-stream-deck/virtual-stream-deck.component';
 export * from './lib/pipes/translate.pipe';
 export * from './lib/guards/type-guards';

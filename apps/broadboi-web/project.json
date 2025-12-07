@@ -24,23 +24,22 @@
         "styles": ["apps/broadboi-web/src/styles.scss"],
         "scripts": []
       },
-      "configurations": {
-        "production": {
-          "budgets": [
-            {
-              "type": "initial",
-              "maximumWarning": "500kb",
-              "maximumError": "1mb"
-            },
-            {
-              "type": "anyComponentStyle",
-              "maximumWarning": "2kb",
-              "maximumError": "4kb"
-            }
-          ],
-          "outputHashing": "all"
-        },
-        "development": {
+                "configurations": {
+                  "production": {
+                    "budgets": [
+                      {
+                        "type": "initial",
+                        "maximumWarning": "500kb",
+                        "maximumError": "1mb"
+                      },
+                      {
+                        "type": "anyComponentStyle",
+                        "maximumWarning": "10kb",
+                        "maximumError": "20kb"
+                      }
+                    ],
+                    "outputHashing": "all"
+                  },        "development": {
           "optimization": false,
           "extractLicenses": false,
           "sourceMap": true

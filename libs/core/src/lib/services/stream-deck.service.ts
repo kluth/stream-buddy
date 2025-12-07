@@ -469,20 +469,20 @@ export class StreamDeckService {
         console.log('Stopping stream...');
         break;
       case 'switch-scene':
-        console.log('Switching scene to:', params.sceneId);
+        console.log('Switching scene to:', params['sceneId']);
         break;
       case 'mute-audio':
-        console.log('Muting audio channel:', params.channelId);
+        console.log('Muting audio channel:', params['channelId']);
         break;
       case 'adjust-volume':
-        console.log('Adjusting volume:', params.volume);
+        console.log('Adjusting volume:', params['volume']);
         break;
       case 'save-replay-buffer':
         console.log('Saving replay buffer...');
         break;
       case 'switch-page':
-        if (params.pageId) {
-          this.switchPage(params.pageId);
+        if (params['pageId']) {
+          this.switchPage(params['pageId']);
         }
         break;
       default:

@@ -1,0 +1,353 @@
+    .stream-dashboard {
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2.5em;
+    }
+
+    .language-selector select {
+      padding: 8px 12px;
+      border-radius: 4px;
+      background: #333;
+      color: white;
+      border: 1px solid #555;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .language-selector select:hover {
+      background: #444;
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: #2a2a2a;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.9em;
+      color: #999;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 1.8em;
+      font-weight: bold;
+    }
+
+    .stat-value.live {
+      color: #ff4444;
+      animation: pulse 2s infinite;
+    }
+
+    .stat-value.recording {
+      color: #ff4444;
+    }
+
+    .stat-value.active {
+      color: #44ff44;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .control-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .control-section {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+
+    .control-section h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.3em;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #4a4a4a;
+      color: white;
+      transition: all 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      background: #5a5a5a;
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      background: #4CAF50;
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: #5CBF60;
+    }
+
+    button.danger {
+      background: #f44336;
+    }
+
+    button.danger:hover:not(:disabled) {
+      background: #ff5346;
+    }
+
+    button.highlight {
+      background: #FF9800;
+    }
+
+    .media-preview {
+      margin-top: 15px;
+    }
+
+    .preview-video {
+      width: 100%;
+      max-height: 200px;
+      border-radius: 5px;
+      background: #000;
+    }
+
+    .recording-info, .buffer-info {
+      margin-top: 10px;
+      padding: 10px;
+      background: #2a2a2a;
+      border-radius: 5px;
+    }
+
+    .transcription-output {
+      margin-top: 15px;
+    }
+
+    .transcript-box {
+      background: #2a2a2a;
+      padding: 15px;
+      border-radius: 5px;
+      min-height: 100px;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 10px;
+      white-space: pre-wrap;
+    }
+
+    .interim-transcript {
+      margin-top: 10px;
+      padding: 10px;
+      background: #3a3a3a;
+      border-radius: 5px;
+      color: #aaa;
+    }
+
+    .audio-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .audio-level {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .audio-level label {
+      min-width: 80px;
+      font-size: 0.9em;
+    }
+
+    .level-meter {
+      flex: 1;
+      height: 20px;
+      background: #2a2a2a;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .level-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50, #FFC107, #f44336);
+      transition: width 0.1s;
+    }
+
+    .level-bar.clipping {
+      background: #f44336;
+    }
+
+    .platform-selection {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 15px;
+    }
+
+    .platform-selection label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .recordings-section {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+
+    .recordings-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .recording-card {
+      background: #2a2a2a;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .recording-thumbnail {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+
+    .recording-info {
+      padding: 15px;
+    }
+
+    .recording-info h4 {
+      margin: 0 0 10px 0;
+      font-size: 0.9em;
+    }
+
+    .recording-info p {
+      margin: 5px 0;
+      font-size: 0.85em;
+      color: #999;
+    }
+    .file-input-label {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #4a4a4a;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+    .file-input-label:hover {
+      background: #5a5a5a;
+    }
+
+    .source-list {
+       margin-top: 15px;
+       background: #2a2a2a;
+       padding: 10px;
+       border-radius: 5px;
+    }
+
+    .source-list ul {
+       list-style: none;
+       padding: 0;
+    }
+
+    .source-list li {
+       padding: 5px 0;
+       border-bottom: 1px solid #444;
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+    }
+
+    .small-btn {
+       padding: 2px 5px;
+       font-size: 0.8em;
+    }
+
+    .small-btn.danger {
+       background: #f44336;
+    }
+
+    .deck-toggle {
+      margin-left: 10px;
+      background: #673AB7;
+    }
+
+    .deck-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .deck-wrapper {
+      position: relative;
+    }
+
+    .close-deck {
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      background: red;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+      cursor: pointer;
+      z-index: 1001;
+    }
