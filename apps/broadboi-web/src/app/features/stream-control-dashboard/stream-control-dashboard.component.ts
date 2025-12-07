@@ -13,6 +13,8 @@ import {
   SupportedLanguage,
   VideoSourceService,
   ImageSourceService,
+  BrowserSourceService,
+  BrowserSourceComponent,
   SceneComposition, 
   SceneSource
 } from '@broadboi/core';
@@ -20,7 +22,7 @@ import {
 @Component({
   selector: 'app-stream-control-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, BrowserSourceComponent],
   template: `
     <div class="stream-dashboard">
       <div class="header-row">
@@ -97,6 +99,9 @@ import {
                 🖼️ Add Image Source
                 <input type="file" accept="image/*" (change)="handleImageUpload($event)" style="display: none">
              </label>
+             <button (click)="addBrowserSource()" class="file-input-label" style="border:none">
+                🌐 Add Browser Source
+             </button>
           </div>
 
           @if (cameraStream()) {
@@ -133,19 +138,31 @@ import {
                         }
                       </li>
                    }
+                   @for (bs of activeBrowserSources(); track bs.id) {
+                      <li>
+                        browser - {{ bs.name }}
+                        <button (click)="removeBrowserSource(bs.id)" class="small-btn danger">🗑️</button>
+                      </li>
+                   }
                 </ul>
              } @else {
                 <p class="hint">No scene active</p>
              }
           </div>
 
-          @if (composedStream()) {
-            <div class="media-preview">
-              <video #composedVideo autoplay muted [srcObject]="composedStream()" class="preview-video"></video>
-              <p>Composed Output - FPS: {{ currentFPS() }}</p>
-            </div>
-          }
+          <div class="compositor-container" style="position: relative; width: 100%; max-width: 1280px; aspect-ratio: 16/9; background: black;">
+            <!-- Canvas Layer -->
+            <video #composedVideo autoplay muted [srcObject]="composedStream()" class="preview-video" style="width: 100%; height: 100%; position: absolute; top:0; left:0;"></video>
+            
+            <!-- Browser Source Overlay Layer -->
+             @for (source of activeBrowserSources(); track source.id) {
+               <!-- Scale position based on container vs actual canvas size logic needed here, simplifying for prototype -->
+               <broadboi-browser-source [source]="source"></broadboi-browser-source>
+             }
+          </div>
+          <p>Composed Output - FPS: {{ currentFPS() }}</p>
         </section>
+
 
 
         <section class="control-section">
@@ -618,6 +635,7 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
   private readonly i18n = inject(I18nService);
   private readonly videoSourceService = inject(VideoSourceService);
   private readonly imageSourceService = inject(ImageSourceService);
+  private readonly browserSourceService = inject(BrowserSourceService);
 
   // Media streams
   cameraStream = signal<MediaStream | null>(null);
@@ -628,6 +646,9 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
   composedStream = this.compositorService.composedOutputStream;
   currentFPS = this.compositorService.currentFPS;
   activeScene = this.compositorService.activeComposition;
+
+  // Browser sources
+  activeBrowserSources = this.browserSourceService.activeSources;
 
   // Recording state
   isRecording = this.recorderService.isRecording;
@@ -773,6 +794,23 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
         console.error('Failed to load image', e);
       }
     }
+  }
+
+  addBrowserSource() {
+    // Add a default browser source (e.g., StreamLabs alert box placeholder)
+    this.browserSourceService.createBrowserSource({
+      name: 'StreamLabs Alert',
+      url: 'https://streamlabs.com/alert-box/v3/demo', // Demo URL
+      width: 600,
+      height: 400,
+      x: 50,
+      y: 50,
+      visible: true
+    });
+  }
+
+  removeBrowserSource(id: string) {
+    this.browserSourceService.deleteBrowserSource(id);
   }
 
   toggleVideoPlayback(id: any) {

@@ -14,6 +14,8 @@ export * from './lib/services/stream-recorder.service';
 export * from './lib/services/transcription.service';
 export * from './lib/services/video-source.service';
 export * from './lib/services/image-source.service';
+export * from './lib/services/browser-source.service';
 export * from './lib/services/i18n.service';
+export * from './lib/components/browser-source/browser-source.component';
 export * from './lib/pipes/translate.pipe';
 export * from './lib/guards/type-guards';

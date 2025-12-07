@@ -65,7 +65,7 @@ export class BrowserSourceService {
   public readonly sourceError$ = this.sourceErrorSubject.asObservable();
 
   // Refresh intervals
-  private refreshIntervals = new Map<string, NodeJS.Timeout>();
+  private refreshIntervals = new Map<string, any>();
 
   constructor(private sanitizer: DomSanitizer) {
     this.loadFromStorage();
