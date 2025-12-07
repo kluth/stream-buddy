@@ -15,6 +15,8 @@ import {
   ImageSourceService,
   BrowserSourceService,
   BrowserSourceComponent,
+  VODEditorService,
+  VODEditorComponent,
   SceneComposition, 
   SceneSource
 } from '@broadboi/core';
@@ -22,7 +24,7 @@ import {
 @Component({
   selector: 'app-stream-control-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, BrowserSourceComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, BrowserSourceComponent, VODEditorComponent],
   template: `
     <div class="stream-dashboard">
       <div class="header-row">
@@ -74,6 +76,11 @@ import {
         </div>
       </div>
 
+      <!-- VOD Editor Overlay -->
+      @if (isEditorActive()) {
+        <broadboi-vod-editor></broadboi-vod-editor>
+      }
+
       <!-- Main Control Panel -->
       <div class="control-panel">
         <section class="control-section">
@@ -102,6 +109,10 @@ import {
              <button (click)="addBrowserSource()" class="file-input-label" style="border:none">
                 🌐 Add Browser Source
              </button>
+             <label class="file-input-label" style="background: #E91E63">
+                ✂️ Edit Video (VOD)
+                <input type="file" accept="video/*" (change)="openVODEditor($event)" style="display: none">
+             </label>
           </div>
 
           @if (cameraStream()) {
@@ -111,6 +122,7 @@ import {
             </div>
           }
         </section>
+
 
         <section class="control-section">
           <h2>🎨 {{ 'dashboard.sceneComposition' | translate }}</h2>
@@ -636,6 +648,7 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
   private readonly videoSourceService = inject(VideoSourceService);
   private readonly imageSourceService = inject(ImageSourceService);
   private readonly browserSourceService = inject(BrowserSourceService);
+  private readonly vodEditorService = inject(VODEditorService);
 
   // Media streams
   cameraStream = signal<MediaStream | null>(null);
@@ -649,6 +662,9 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
 
   // Browser sources
   activeBrowserSources = this.browserSourceService.activeSources;
+
+  // VOD Editor state
+  isEditorActive = computed(() => !!this.vodEditorService.activeClip());
 
   // Recording state
   isRecording = this.recorderService.isRecording;
@@ -811,6 +827,20 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
 
   removeBrowserSource(id: string) {
     this.browserSourceService.deleteBrowserSource(id);
+  }
+
+  openVODEditor(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      const url = URL.createObjectURL(file);
+      // Create temp video to get duration
+      const tempVideo = document.createElement('video');
+      tempVideo.src = url;
+      tempVideo.onloadedmetadata = () => {
+        this.vodEditorService.loadClip(url, file.name, tempVideo.duration);
+      };
+    }
   }
 
   toggleVideoPlayback(id: any) {
