@@ -1,9 +1,9 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
 import { Subject } from 'rxjs';
 
-export interface StreamSettings {
+export interface ApplicationStreamSettings {
   // Video Settings
-  resolution: VideoResolution;
+  resolution: SettingsVideoResolution;
   framerate: number;
   bitrate: number;
   keyframeInterval: number;
@@ -60,7 +60,7 @@ export interface CustomPlatformSettings {
   streamKey: string;
 }
 
-export interface VideoResolution {
+export interface SettingsVideoResolution {
   width: number;
   height: number;
   label: string;
@@ -102,7 +102,7 @@ export interface AdvancedSettings {
 }
 
 export interface ApplicationSettings {
-  stream: StreamSettings;
+  stream: ApplicationStreamSettings;
   platforms: PlatformSettings;
   ui: UISettings;
   notifications: NotificationSettings;
@@ -111,7 +111,7 @@ export interface ApplicationSettings {
   lastModified: Date;
 }
 
-const DEFAULT_STREAM_SETTINGS: StreamSettings = {
+const DEFAULT_STREAM_SETTINGS: ApplicationStreamSettings = {
   resolution: { width: 1920, height: 1080, label: '1080p' },
   framerate: 60,
   bitrate: 6000,
@@ -206,7 +206,7 @@ export class SettingsService {
   public readonly settingsChanged$ = this.settingsChangedSubject.asObservable();
 
   // Available resolutions
-  readonly availableResolutions: VideoResolution[] = [
+  readonly availableResolutions: SettingsVideoResolution[] = [
     { width: 3840, height: 2160, label: '4K (2160p)' },
     { width: 2560, height: 1440, label: '1440p' },
     { width: 1920, height: 1080, label: '1080p' },
@@ -232,7 +232,7 @@ export class SettingsService {
   /**
    * Update stream settings
    */
-  updateStreamSettings(updates: Partial<StreamSettings>): void {
+  updateApplicationStreamSettings(updates: Partial<ApplicationStreamSettings>): void {
     this.settings.update(settings => ({
       ...settings,
       stream: { ...settings.stream, ...updates },
@@ -369,7 +369,7 @@ export class SettingsService {
   /**
    * Get quality presets
    */
-  getQualityPresets(): Array<{ name: string; settings: Partial<StreamSettings> }> {
+  getQualityPresets(): Array<{ name: string; settings: Partial<ApplicationStreamSettings> }> {
     return [
       {
         name: 'Ultra (1080p60)',
@@ -425,7 +425,7 @@ export class SettingsService {
   applyQualityPreset(presetName: string): void {
     const preset = this.getQualityPresets().find(p => p.name === presetName);
     if (preset) {
-      this.updateStreamSettings(preset.settings);
+      this.updateApplicationStreamSettings(preset.settings);
     }
   }
 

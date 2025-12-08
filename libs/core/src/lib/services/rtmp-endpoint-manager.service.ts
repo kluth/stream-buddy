@@ -51,7 +51,7 @@ export interface EndpointGroup {
   enabled: boolean;
 }
 
-export interface ConnectionStats {
+export interface RTMPConnectionStats {
   endpointId: string;
   uploadSpeed: number;
   droppedFrames: number;
@@ -315,7 +315,7 @@ export class RTMPEndpointManagerService {
   /**
    * Get streaming statistics
    */
-  getStreamingStats(): ConnectionStats[] {
+  getStreamingStats(): RTMPConnectionStats[] {
     return this.activeEndpoints().map(endpoint => ({
       endpointId: endpoint.id,
       uploadSpeed: endpoint.uploadSpeed || 0,

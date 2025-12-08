@@ -22,7 +22,7 @@ export interface AudioChannel {
   outputTo: string[]; // Output channel IDs ('master', 'monitor', custom)
 
   // Effects
-  effects: AudioEffect[];
+  effects: MixerEffect[];
 
   // Monitoring
   level: number; // -60 to 0 dB
@@ -34,14 +34,14 @@ export interface AudioChannel {
   color?: string;
 }
 
-export interface AudioEffect {
+export interface MixerEffect {
   id: string;
-  type: AudioEffectType;
+  type: MixerEffectType;
   enabled: boolean;
-  parameters: AudioEffectParameters;
+  parameters: MixerEffectParameters;
 }
 
-export type AudioEffectType =
+export type MixerEffectType =
   | 'compressor'
   | 'limiter'
   | 'gate'
@@ -54,7 +54,7 @@ export type AudioEffectType =
   | 'pitch-shift'
   | 'stereo-widener';
 
-export interface AudioEffectParameters {
+export interface MixerEffectParameters {
   // Compressor
   threshold?: number;
   ratio?: number;
@@ -70,7 +70,7 @@ export interface AudioEffectParameters {
   gateRelease?: number;
 
   // EQ
-  eqBands?: EQBand[];
+  eqBands?: MixerEQBand[];
 
   // Reverb
   reverbType?: 'room' | 'hall' | 'plate' | 'spring';
@@ -92,7 +92,7 @@ export interface AudioEffectParameters {
   stereoWidth?: number;
 }
 
-export interface EQBand {
+export interface MixerEQBand {
   frequency: number;
   gain: number; // -12 to +12 dB
   q: number;
@@ -180,9 +180,6 @@ export class AdvancedAudioMixerService {
 
   // ============ CHANNEL METHODS ============
 
-  /**
-   * Add a new audio channel
-   */
   addChannel(channel: Omit<AudioChannel, 'id' | 'level' | 'peakLevel' | 'vuMeterLevels' | 'active'>): string {
     const id = this.generateId('channel');
     const newChannel: AudioChannel = {
@@ -198,7 +195,6 @@ export class AdvancedAudioMixerService {
     this.saveChannels();
     this.channelAddedSubject.next(newChannel);
 
-    // Initialize audio nodes if media stream is provided
     if (newChannel.mediaStream && this.audioContext) {
       this.initializeChannelNodes(newChannel);
     }
@@ -206,15 +202,11 @@ export class AdvancedAudioMixerService {
     return id;
   }
 
-  /**
-   * Remove a channel
-   */
   removeChannel(channelId: string): void {
     if (channelId === 'master') {
       throw new Error('Cannot remove master channel');
     }
 
-    // Cleanup audio nodes
     this.cleanupChannelNodes(channelId);
 
     this.channels.update(channels => channels.filter(c => c.id !== channelId));
@@ -222,15 +214,11 @@ export class AdvancedAudioMixerService {
     this.channelRemovedSubject.next(channelId);
   }
 
-  /**
-   * Update a channel
-   */
   updateChannel(channelId: string, updates: Partial<AudioChannel>): void {
     this.channels.update(channels =>
       channels.map(c => (c.id === channelId ? { ...c, ...updates } : c))
     );
 
-    // Update audio nodes if volume/pan/mute changed
     if (updates.volume !== undefined) {
       this.updateGainNode(channelId, updates.volume, updates.muted);
       this.volumeChangedSubject.next({ channelId, volume: updates.volume });
@@ -246,25 +234,16 @@ export class AdvancedAudioMixerService {
     this.saveChannels();
   }
 
-  /**
-   * Set channel volume
-   */
   setVolume(channelId: string, volume: number): void {
     const clampedVolume = Math.max(0, Math.min(100, volume));
     this.updateChannel(channelId, { volume: clampedVolume });
   }
 
-  /**
-   * Set channel pan
-   */
   setPan(channelId: string, pan: number): void {
     const clampedPan = Math.max(-100, Math.min(100, pan));
     this.updateChannel(channelId, { pan: clampedPan });
   }
 
-  /**
-   * Mute/unmute channel
-   */
   toggleMute(channelId: string): void {
     const channel = this.channels().find(c => c.id === channelId);
     if (channel) {
@@ -272,14 +251,10 @@ export class AdvancedAudioMixerService {
     }
   }
 
-  /**
-   * Solo/unsolo channel
-   */
   toggleSolo(channelId: string): void {
     const channel = this.channels().find(c => c.id === channelId);
     if (!channel) return;
 
-    // If activating solo, mute all other channels
     if (!channel.solo) {
       this.channels.update(channels =>
         channels.map(c => ({
@@ -289,7 +264,6 @@ export class AdvancedAudioMixerService {
         }))
       );
     } else {
-      // If deactivating solo, unmute all channels
       this.channels.update(channels =>
         channels.map(c => ({
           ...c,
@@ -302,9 +276,6 @@ export class AdvancedAudioMixerService {
     this.saveChannels();
   }
 
-  /**
-   * Attach media stream to channel
-   */
   attachMediaStream(channelId: string, stream: MediaStream): void {
     this.updateChannel(channelId, {
       mediaStream: stream,
@@ -316,9 +287,6 @@ export class AdvancedAudioMixerService {
     }
   }
 
-  /**
-   * Detach media stream from channel
-   */
   detachMediaStream(channelId: string): void {
     this.cleanupChannelNodes(channelId);
     this.updateChannel(channelId, {
@@ -329,17 +297,14 @@ export class AdvancedAudioMixerService {
 
   // ============ EFFECTS METHODS ============
 
-  /**
-   * Add effect to channel
-   */
-  addEffect(channelId: string, effect: Omit<AudioEffect, 'id'>): string {
+  addEffect(channelId: string, effect: Omit<MixerEffect, 'id'>): string {
     const channel = this.channels().find(c => c.id === channelId);
     if (!channel) {
       throw new Error(`Channel ${channelId} not found`);
     }
 
     const id = this.generateId('effect');
-    const newEffect: AudioEffect = {
+    const newEffect: MixerEffect = {
       ...effect,
       id,
     };
@@ -351,9 +316,6 @@ export class AdvancedAudioMixerService {
     return id;
   }
 
-  /**
-   * Remove effect from channel
-   */
   removeEffect(channelId: string, effectId: string): void {
     const channel = this.channels().find(c => c.id === channelId);
     if (!channel) return;
@@ -363,10 +325,7 @@ export class AdvancedAudioMixerService {
     });
   }
 
-  /**
-   * Update effect parameters
-   */
-  updateEffect(channelId: string, effectId: string, parameters: Partial<AudioEffectParameters>): void {
+  updateEffect(channelId: string, effectId: string, parameters: Partial<MixerEffectParameters>): void {
     const channel = this.channels().find(c => c.id === channelId);
     if (!channel) return;
 
@@ -379,9 +338,6 @@ export class AdvancedAudioMixerService {
     this.updateChannel(channelId, { effects: updatedEffects });
   }
 
-  /**
-   * Toggle effect enabled/disabled
-   */
   toggleEffect(channelId: string, effectId: string): void {
     const channel = this.channels().find(c => c.id === channelId);
     if (!channel) return;
@@ -395,9 +351,6 @@ export class AdvancedAudioMixerService {
 
   // ============ SNAPSHOT METHODS ============
 
-  /**
-   * Save current mixer state as snapshot
-   */
   saveSnapshot(name: string, description?: string): string {
     const id = this.generateId('snapshot');
     const snapshot: AudioSnapshot = {
@@ -414,16 +367,12 @@ export class AdvancedAudioMixerService {
     return id;
   }
 
-  /**
-   * Load a snapshot
-   */
   loadSnapshot(snapshotId: string): void {
     const snapshot = this.snapshots().find(s => s.id === snapshotId);
     if (!snapshot) {
       throw new Error(`Snapshot ${snapshotId} not found`);
     }
 
-    // Restore all channels except master's media stream
     const restoredChannels = snapshot.channels.map(c => ({
       ...c,
       mediaStream: c.id !== 'master'
@@ -435,9 +384,6 @@ export class AdvancedAudioMixerService {
     this.saveChannels();
   }
 
-  /**
-   * Delete a snapshot
-   */
   deleteSnapshot(snapshotId: string): void {
     this.snapshots.update(snapshots => snapshots.filter(s => s.id !== snapshotId));
     this.saveSnapshots();
@@ -445,9 +391,6 @@ export class AdvancedAudioMixerService {
 
   // ============ ROUTING METHODS ============
 
-  /**
-   * Create audio route
-   */
   createRoute(route: Omit<AudioRoute, 'id'>): string {
     const id = this.generateId('route');
     const newRoute: AudioRoute = {
@@ -461,23 +404,16 @@ export class AdvancedAudioMixerService {
     return id;
   }
 
-  /**
-   * Delete route
-   */
   deleteRoute(routeId: string): void {
     this.routes.update(routes => routes.filter(r => r.id !== routeId));
     this.saveRoutes();
   }
 
-  /**
-   * Get output mix for a specific output channel
-   */
   getOutputMix(outputChannelId: string): MediaStream | null {
     if (!this.audioContext) return null;
 
     const destination = this.audioContext.createMediaStreamDestination();
 
-    // Route all channels that output to this channel
     for (const channel of this.activeChannels()) {
       if (channel.outputTo.includes(outputChannelId)) {
         const gainNode = this.gainNodes.get(channel.id);
@@ -492,9 +428,6 @@ export class AdvancedAudioMixerService {
 
   // ============ AUDIO CONTEXT METHODS ============
 
-  /**
-   * Initialize audio context
-   */
   private initializeAudioContext(): void {
     try {
       (this as any).audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -503,41 +436,30 @@ export class AdvancedAudioMixerService {
     }
   }
 
-  /**
-   * Initialize audio nodes for a channel
-   */
   private initializeChannelNodes(channel: AudioChannel): void {
     if (!this.audioContext || !channel.mediaStream) return;
 
-    // Create source node
     const source = this.audioContext.createMediaStreamSource(channel.mediaStream);
 
-    // Create gain node
     const gainNode = this.audioContext.createGain();
     gainNode.gain.value = channel.muted ? 0 : channel.volume / 100;
     this.gainNodes.set(channel.id, gainNode);
 
-    // Create pan node
     const panNode = this.audioContext.createStereoPanner();
     panNode.pan.value = channel.pan / 100;
     this.panNodes.set(channel.id, panNode);
 
-    // Create analyzer node for level monitoring
     const analyzerNode = this.audioContext.createAnalyser();
     analyzerNode.fftSize = 256;
     analyzerNode.smoothingTimeConstant = 0.8;
     this.analyzerNodes.set(channel.id, analyzerNode);
 
-    // Connect nodes: source -> gain -> pan -> analyzer -> destination
     source.connect(gainNode);
     gainNode.connect(panNode);
     panNode.connect(analyzerNode);
     analyzerNode.connect(this.audioContext.destination);
   }
 
-  /**
-   * Cleanup audio nodes for a channel
-   */
   private cleanupChannelNodes(channelId: string): void {
     const gainNode = this.gainNodes.get(channelId);
     const panNode = this.panNodes.get(channelId);
@@ -557,9 +479,6 @@ export class AdvancedAudioMixerService {
     }
   }
 
-  /**
-   * Update gain node
-   */
   private updateGainNode(channelId: string, volume: number, muted?: boolean): void {
     const gainNode = this.gainNodes.get(channelId);
     if (gainNode) {
@@ -568,9 +487,6 @@ export class AdvancedAudioMixerService {
     }
   }
 
-  /**
-   * Update pan node
-   */
   private updatePanNode(channelId: string, pan: number): void {
     const panNode = this.panNodes.get(channelId);
     if (panNode) {
@@ -578,21 +494,16 @@ export class AdvancedAudioMixerService {
     }
   }
 
-  /**
-   * Start level monitoring
-   */
   private startLevelMonitoring(): void {
     setInterval(() => {
       for (const [channelId, analyzerNode] of this.analyzerNodes) {
         const dataArray = new Uint8Array(analyzerNode.frequencyBinCount);
         analyzerNode.getByteFrequencyData(dataArray);
 
-        // Calculate RMS level
         const sum = dataArray.reduce((acc, val) => acc + val * val, 0);
         const rms = Math.sqrt(sum / dataArray.length);
         const level = 20 * Math.log10(rms / 255) || -60;
 
-        // Update channel level
         this.channels.update(channels =>
           channels.map(c =>
             c.id === channelId
@@ -610,22 +521,15 @@ export class AdvancedAudioMixerService {
     }, 50);
   }
 
-  /**
-   * Generate unique ID
-   */
   private generateId(prefix: string): string {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  /**
-   * Load channels from storage
-   */
   private loadChannels(): void {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         const channels = JSON.parse(stored) as AudioChannel[];
-        // Don't restore media streams, but keep config
         const restoredChannels = channels.map(c => ({
           ...c,
           mediaStream: undefined,
@@ -638,12 +542,8 @@ export class AdvancedAudioMixerService {
     }
   }
 
-  /**
-   * Save channels to storage
-   */
   private saveChannels(): void {
     try {
-      // Don't save media streams
       const channelsToSave = this.channels().map(c => {
         const { mediaStream, ...rest } = c;
         return rest;
@@ -654,9 +554,6 @@ export class AdvancedAudioMixerService {
     }
   }
 
-  /**
-   * Load snapshots from storage
-   */
   private loadSnapshots(): void {
     try {
       const stored = localStorage.getItem(`${this.STORAGE_KEY}-snapshots`);
@@ -673,9 +570,6 @@ export class AdvancedAudioMixerService {
     }
   }
 
-  /**
-   * Save snapshots to storage
-   */
   private saveSnapshots(): void {
     try {
       localStorage.setItem(`${this.STORAGE_KEY}-snapshots`, JSON.stringify(this.snapshots()));
@@ -684,9 +578,6 @@ export class AdvancedAudioMixerService {
     }
   }
 
-  /**
-   * Load routes from storage
-   */
   private loadRoutes(): void {
     try {
       const stored = localStorage.getItem(`${this.STORAGE_KEY}-routes`);
@@ -698,9 +589,6 @@ export class AdvancedAudioMixerService {
     }
   }
 
-  /**
-   * Save routes to storage
-   */
   private saveRoutes(): void {
     try {
       localStorage.setItem(`${this.STORAGE_KEY}-routes`, JSON.stringify(this.routes()));

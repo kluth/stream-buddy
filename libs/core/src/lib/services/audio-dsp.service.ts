@@ -26,7 +26,7 @@ import { Subject } from 'rxjs';
 // Types and Interfaces
 // ============================================================================
 
-export type EffectType =
+export type AudioDSPEffectType =
   | 'eq-parametric'
   | 'eq-graphic'
   | 'compressor'
@@ -53,7 +53,7 @@ export type FilterType = 'lowpass' | 'highpass' | 'bandpass' | 'lowshelf' | 'hig
 export interface AudioEffect {
   id: string;
   name: string;
-  type: EffectType;
+  type: AudioDSPEffectType;
   enabled: boolean;
   bypass: boolean;
 
@@ -802,7 +802,7 @@ export class AudioDSPService {
     return compressor;
   }
 
-  private createFilter(type: EffectType, params: EffectParameters): BiquadFilterNode {
+  private createFilter(type: AudioDSPEffectType, params: EffectParameters): BiquadFilterNode {
     const filter = this.audioContext!.createBiquadFilter();
 
     const typeMap: Record<string, BiquadFilterType> = {

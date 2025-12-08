@@ -170,7 +170,7 @@ export class VODEditorComponent {
       this.currentTime = this.videoElement.nativeElement.currentTime;
       
       const clip = this.editorService.activeClip();
-      if (clip) {
+      if (clip && clip.trim) {
         // Loop trim region logic
         if (this.currentTime >= clip.trim.end) {
             this.videoElement.nativeElement.currentTime = clip.trim.start;
@@ -186,22 +186,26 @@ export class VODEditorComponent {
   }
 
   updateStart(value: number, clip: any) {
-    this.editorService.updateTrim(value, clip.trim.end);
-    if (this.videoElement) {
-      this.videoElement.nativeElement.currentTime = value;
+    if (clip.trim) {
+      this.editorService.updateTrim(value, clip.trim.end);
+      if (this.videoElement) {
+        this.videoElement.nativeElement.currentTime = value;
+      }
     }
   }
 
   updateEnd(value: number, clip: any) {
-    this.editorService.updateTrim(clip.trim.start, value);
-    if (this.videoElement) {
-      this.videoElement.nativeElement.currentTime = value; // Preview end point
+    if (clip.trim) {
+      this.editorService.updateTrim(clip.trim.start, value);
+      if (this.videoElement) {
+        this.videoElement.nativeElement.currentTime = value; // Preview end point
+      }
     }
   }
 
   previewTrim() {
     const clip = this.editorService.activeClip();
-    if (clip && this.videoElement) {
+    if (clip && clip.trim && this.videoElement) {
       this.videoElement.nativeElement.currentTime = clip.trim.start;
       this.videoElement.nativeElement.play();
     }

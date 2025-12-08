@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { Subject, interval } from 'rxjs';
 
-export interface ChatMessage {
+export interface ModerationChatMessage {
   id: string;
   userId: string;
   username: string;
@@ -156,7 +156,7 @@ export class AIChatModerationService {
   private readonly STATS_UPDATE_INTERVAL = 5000; // 5 seconds
 
   // Message tracking
-  private readonly messageHistory = new Map<string, ChatMessage[]>();
+  private readonly messageHistory = new Map<string, ModerationChatMessage[]>();
   private readonly userViolations = new Map<string, number>();
 
   // Reactive state
@@ -180,11 +180,11 @@ export class AIChatModerationService {
   );
 
   // Events
-  private readonly messageFlaggedSubject = new Subject<ChatMessage>();
-  private readonly messageBlockedSubject = new Subject<ChatMessage>();
+  private readonly messageFlaggedSubject = new Subject<ModerationChatMessage>();
+  private readonly messageBlockedSubject = new Subject<ModerationChatMessage>();
   private readonly userTimedOutSubject = new Subject<ModeratedUser>();
   private readonly userBannedSubject = new Subject<ModeratedUser>();
-  private readonly violationDetectedSubject = new Subject<{ message: ChatMessage; rule: ModerationRule }>();
+  private readonly violationDetectedSubject = new Subject<{ message: ModerationChatMessage; rule: ModerationRule }>();
 
   public readonly messageFlagged$ = this.messageFlaggedSubject.asObservable();
   public readonly messageBlocked$ = this.messageBlockedSubject.asObservable();
@@ -204,7 +204,7 @@ export class AIChatModerationService {
   /**
    * Moderate a chat message
    */
-  async moderateMessage(message: ChatMessage): Promise<ChatMessage> {
+  async moderateMessage(message: ModerationChatMessage): Promise<ModerationChatMessage> {
     if (!this.config().enabled) {
       return message;
     }
@@ -242,7 +242,7 @@ export class AIChatModerationService {
   /**
    * Check if message violates a rule
    */
-  private async checkRule(message: ChatMessage, rule: ModerationRule): Promise<boolean> {
+  private async checkRule(message: ModerationChatMessage, rule: ModerationRule): Promise<boolean> {
     const condition = rule.condition;
 
     switch (rule.type) {
@@ -309,7 +309,7 @@ export class AIChatModerationService {
   /**
    * Check AI rule
    */
-  private async checkAIRule(message: ChatMessage, condition: RuleCondition): Promise<boolean> {
+  private async checkAIRule(message: ModerationChatMessage, condition: RuleCondition): Promise<boolean> {
     const score = await this.getAIModerationScore(message.message);
     message.moderationScore = score;
 
@@ -328,7 +328,7 @@ export class AIChatModerationService {
   /**
    * Check spam rule
    */
-  private checkSpamRule(message: ChatMessage, condition: RuleCondition): boolean {
+  private checkSpamRule(message: ModerationChatMessage, condition: RuleCondition): boolean {
     const userMessages = this.messageHistory.get(message.userId) || [];
     const timeWindow = condition.timeWindow || 10; // seconds
     const now = Date.now();
@@ -414,7 +414,7 @@ export class AIChatModerationService {
   /**
    * Apply rule action to message
    */
-  private async applyRuleAction(message: ChatMessage, rule: ModerationRule): Promise<ChatMessage> {
+  private async applyRuleAction(message: ModerationChatMessage, rule: ModerationRule): Promise<ModerationChatMessage> {
     message.moderated = true;
     message.moderationReason = rule.name;
 
@@ -536,7 +536,7 @@ export class AIChatModerationService {
   /**
    * AI moderate message
    */
-  private async aiModerateMessage(message: ChatMessage): Promise<ChatMessage> {
+  private async aiModerateMessage(message: ModerationChatMessage): Promise<ModerationChatMessage> {
     const score = await this.getAIModerationScore(message.message);
     message.moderationScore = score;
 
@@ -737,7 +737,7 @@ export class AIChatModerationService {
   /**
    * Check if user is exempt from moderation
    */
-  private isUserExempt(message: ChatMessage): boolean {
+  private isUserExempt(message: ModerationChatMessage): boolean {
     const config = this.config();
 
     if (message.userRole === 'broadcaster') return true;
@@ -752,7 +752,7 @@ export class AIChatModerationService {
   /**
    * Track message for spam detection
    */
-  private trackMessage(message: ChatMessage): void {
+  private trackMessage(message: ModerationChatMessage): void {
     const userMessages = this.messageHistory.get(message.userId) || [];
     userMessages.push(message);
 
@@ -816,7 +816,7 @@ export class AIChatModerationService {
   /**
    * Update statistics
    */
-  private updateStats(message: ChatMessage): void {
+  private updateStats(message: ModerationChatMessage): void {
     this.stats.update(stats => ({
       ...stats,
       totalMessages: stats.totalMessages + 1,

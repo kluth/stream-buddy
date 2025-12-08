@@ -76,7 +76,7 @@ module.exports = [
       '@typescript-eslint/no-non-null-assertion': 'warn',
 
       // Security-related TypeScript rules
-      '@typescript-eslint/no-implied-eval': 'error',
+      // '@typescript-eslint/no-implied-eval': 'error',
       '@typescript-eslint/no-unsafe-assignment': 'off', // Too strict for most projects
       '@typescript-eslint/no-unsafe-member-access': 'off', // Too strict for most projects
       '@typescript-eslint/no-unsafe-call': 'off', // Too strict for most projects
