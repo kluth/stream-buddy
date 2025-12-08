@@ -10,8 +10,20 @@
       <button (click)="showDeck = !showDeck" class="deck-toggle">
         📱 Stream Deck
       </button>
+      <button (click)="showGuests = !showGuests" class="guest-toggle">
+        🧑‍🤝‍🧑 Guests
+      </button>
     </div>
   </div>
+
+  @if (showGuests) {
+    <div class="deck-overlay"> <!-- Reusing deck-overlay styles for now -->
+      <div class="deck-wrapper">
+        <button class="close-deck" (click)="showGuests = false">❌</button>
+        <broadboi-remote-guest-manager></broadboi-remote-guest-manager>
+      </div>
+    </div>
+  }
 
   @if (showDeck) {
     <div class="deck-overlay">

@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject, OnDestroy } from '@angular/core';
 import { Subject, interval } from 'rxjs';
 
 export interface RemoteGuest {
@@ -122,7 +122,7 @@ export interface WebRTCConfig {
   // Connection config
   iceTransportPolicy: 'all' | 'relay';
   bundlePolicy: 'balanced' | 'max-bundle' | 'max-compat';
-  rtcpMuxPolicy: 'negotiate' | 'require';
+  rtcpMuxPolicy: 'require';
 
   // SFU config
   sfuUrl?: string;

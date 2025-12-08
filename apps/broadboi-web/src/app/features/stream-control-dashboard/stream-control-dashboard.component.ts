@@ -18,6 +18,8 @@ import {
   VODEditorService,
   VODEditorComponent,
   VirtualStreamDeckComponent,
+  RemoteGuestManagerComponent,
+  RemoteGuestService,
   SceneComposition, 
   SceneSource
 } from '@broadboi/core';
@@ -25,7 +27,7 @@ import {
 @Component({
   selector: 'app-stream-control-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, BrowserSourceComponent, VODEditorComponent, VirtualStreamDeckComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, BrowserSourceComponent, VODEditorComponent, VirtualStreamDeckComponent, RemoteGuestManagerComponent],
   templateUrl: './stream-control-dashboard.component.html',
   styleUrl: './stream-control-dashboard.component.scss'
 })
@@ -42,6 +44,7 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
   private readonly imageSourceService = inject(ImageSourceService);
   private readonly browserSourceService = inject(BrowserSourceService);
   private readonly vodEditorService = inject(VODEditorService);
+  private readonly remoteGuestService = inject(RemoteGuestService);
 
   // Media streams
   cameraStream = signal<MediaStream | null>(null);
@@ -58,6 +61,9 @@ export class StreamControlDashboardComponent implements OnInit, OnDestroy {
 
   // VOD Editor state
   isEditorActive = computed(() => !!this.vodEditorService.activeClip());
+
+  // Remote Guest state
+  showGuests = false;
 
   // Recording state
   isRecording = this.recorderService.isRecording;
