@@ -1,0 +1,20 @@
+<div class="meter-container" [attr.aria-label]="'Audio Level: ' + level() + '%'" role="meter" [attr.aria-valuenow]="level()" aria-valuemin="0" aria-valuemax="100">
+  <div class="meter-bar">
+    <!-- Background segments for scale -->
+    <div class="segment red"></div>
+    <div class="segment yellow"></div>
+    <div class="segment green"></div>
+    
+    <!-- Actual level fill -->
+    <div class="level-fill" 
+         [style.height.%]="level()"
+         [class.clipping]="clipping()">
+    </div>
+
+    <!-- Peak indicator -->
+    <div class="peak-indicator"
+         [style.bottom.%]="peakLevel()">
+    </div>
+  </div>
+  <div class="clip-led" [class.active]="clipping()"></div>
+</div>

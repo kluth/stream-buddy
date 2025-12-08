@@ -1,8 +1,8 @@
-# Stream Buddy Infrastructure Documentation
+# Broadboi Infrastructure Documentation
 
 ## Overview
 
-Stream Buddy uses a microservices architecture with the following components:
+BroadBoi uses a microservices architecture with the following components:
 
 1. **Angular Frontend** (Browser) - User interface and WebRTC stream capture
 2. **MediaMTX Server** (Docker) - WebRTC to RTMP gateway
@@ -66,7 +66,7 @@ MediaMTX is a real-time media server that acts as the bridge between browser-bas
 
 ### Prerequisites
 
-Before setting up Stream Buddy infrastructure, ensure you have:
+Before setting up Broadboi infrastructure, ensure you have:
 
 - **Docker Engine** 20.10 or later
 - **Docker Compose** V2 or later
@@ -102,8 +102,7 @@ sudo lsof -i :9997
 MediaMTX requires SSL certificates for WebRTC connections (even for local development):
 
 ```bash
-cd /home/matthias/projects/stream-buddy
-./scripts/generate-certs.sh
+cd /home/matthias/projects/broadboi
 ```
 
 This generates:
@@ -121,8 +120,8 @@ docker-compose up -d mediamtx
 **Expected Output:**
 ```
 [+] Running 2/2
- ✔ Network stream-buddy-network  Created
- ✔ Container stream-buddy-mediamtx  Started
+ ✔ Network broadboi-network  Created
+ ✔ Container broadboi-mediamtx  Started
 ```
 
 #### 3. Verify MediaMTX is Running
@@ -133,7 +132,7 @@ docker-compose ps
 
 # Expected output:
 # NAME                    STATUS              PORTS
-# stream-buddy-mediamtx   Up (healthy)        0.0.0.0:1935->1935/tcp, 0.0.0.0:8889->8889/tcp, ...
+# broadboi-mediamtx   Up (healthy)        0.0.0.0:1935->1935/tcp, 0.0.0.0:8889->8889/tcp, ...
 ```
 
 #### 4. Test API Endpoints
@@ -213,7 +212,7 @@ mediamtx  | INF [WebRTC] listener opened on :8889 (HTTP)
 ### Starting the Server
 
 ```bash
-cd /home/matthias/projects/stream-buddy
+cd /home/matthias/projects/broadboi
 docker-compose up -d mediamtx
 ```
 
@@ -321,7 +320,7 @@ sudo lsof -i :8889
 1. Check active streams: `curl http://localhost:9997/v3/paths/list`
 2. Verify no unnecessary transcoding (use H.264 video passthrough)
 3. Reduce stream quality/bitrate from browser
-4. Monitor with: `docker stats stream-buddy-mediamtx`
+4. Monitor with: `docker stats broadboi-mediamtx`
 
 ## Security Considerations
 
@@ -409,7 +408,7 @@ paths:
 
 ```bash
 # Check container health
-docker inspect stream-buddy-mediamtx --format='{{.State.Health.Status}}'
+docker inspect broadboi-mediamtx --format='{{.State.Health.Status}}'
 
 # Expected: healthy
 ```
@@ -447,10 +446,10 @@ docker-compose logs mediamtx | grep ERR
 For issues related to:
 - **MediaMTX Configuration**: Check GitHub issues at https://github.com/bluenviron/mediamtx/issues
 - **Docker Setup**: Refer to Docker documentation
-- **Stream Buddy Integration**: See project README and technical specifications
+- **BroadBoi Integration**: See project README and technical specifications
 
 ---
 
 **Document Version**: 1.0.0
 **Last Updated**: 2025-11-17
-**Maintained By**: Stream Buddy Development Team
+**Maintained By**: BroadBoi Development Team

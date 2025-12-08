@@ -1,0 +1,248 @@
+<div class="overlay-editor-container">
+  <h1>Overlay Editor</h1>
+
+  <div class="editor-layout">
+    <aside class="sidebar">
+      <h2>Add Elements</h2>
+      <div class="element-add-controls">
+        <button (click)="addElement('text')">Add Text</button>
+        <button (click)="addElement('image')">Add Image</button>
+        <button (click)="addElement('video')">Add Video</button>
+        <button (click)="addElement('web')">Add Web Source</button>
+        <button (click)="addElement('chat')">Add Chat</button>
+        <button (click)="addElement('alert')">Add Alert</button>
+      </div>
+
+      <hr>
+
+      <h2>Actions</h2>
+      <div class="actions-controls">
+        <button (click)="saveOverlay()">Save Overlay</button>
+        <!-- Add a preview button that might navigate to a live preview or open a modal -->
+      </div>
+
+      <hr>
+
+      <h2>Properties</h2>
+      <div class="properties-panel">
+        <div *ngIf="selectedElement">
+          <h3>{{ selectedElement.name }} ({{ selectedElement.type }})</h3>
+          <div class="form-group">
+            <label>Name:</label>
+            <input type="text" [(ngModel)]="selectedElement.name" (ngModelChange)="updateSelectedElementProperty('name', $event)">
+          </div>
+          <div class="form-group">
+            <label>X:</label>
+            <input type="number" [(ngModel)]="selectedElement.x" (ngModelChange)="updateSelectedElementProperty('x', $event)">
+          </div>
+          <div class="form-group">
+            <label>Y:</label>
+            <input type="number" [(ngModel)]="selectedElement.y" (ngModelChange)="updateSelectedElementProperty('y', $event)">
+          </div>
+          <div class="form-group">
+            <label>Width:</label>
+            <input type="number" [(ngModel)]="selectedElement.width" (ngModelChange)="updateSelectedElementProperty('width', $event)">
+          </div>
+          <div class="form-group">
+            <label>Height:</label>
+            <input type="number" [(ngModel)]="selectedElement.height" (ngModelChange)="updateSelectedElementProperty('height', $event)">
+          </div>
+          <div class="form-group">
+            <label>Opacity:</label>
+            <input type="range" min="0" max="1" step="0.01" [(ngModel)]="selectedElement.opacity" (ngModelChange)="updateSelectedElementProperty('opacity', $event)">
+            <span>{{ selectedElement.opacity | number:'1.0-2' }}</span>
+          </div>
+          <div class="form-group">
+            <label>Z-Index:</label>
+            <input type="number" [(ngModel)]="selectedElement.zIndex" (ngModelChange)="updateSelectedElementProperty('zIndex', $event)">
+          </div>
+          <div class="form-group">
+            <label>Visible:</label>
+            <input type="checkbox" [(ngModel)]="selectedElement.visible" (ngModelChange)="updateSelectedElementProperty('visible', $event)">
+          </div>
+          <div class="form-group">
+            <label>Locked:</label>
+            <input type="checkbox" [(ngModel)]="selectedElement.locked" (ngModelChange)="updateSelectedElementProperty('locked', $event)">
+          </div>
+
+          <!-- Type-specific properties -->
+          <ng-container *ngIf="isTextElement(selectedElement)">
+            <div class="form-group">
+              <label>Text:</label>
+              <input type="text" [(ngModel)]="selectedElement.text" (ngModelChange)="updateSelectedElementProperty('text', $event)">
+            </div>
+            <div class="form-group">
+              <label>Font Size:</label>
+              <input type="number" [(ngModel)]="selectedElement.fontSize" (ngModelChange)="updateSelectedElementProperty('fontSize', $event)">
+            </div>
+            <div class="form-group">
+              <label>Color:</label>
+              <input type="color" [(ngModel)]="selectedElement.fill" (ngModelChange)="updateSelectedElementProperty('fill', $event)">
+            </div>
+            <!-- More text properties -->
+          </ng-container>
+
+          <ng-container *ngIf="isImageElement(selectedElement)">
+            <div class="form-group">
+              <label>Image URL:</label>
+              <input type="text" [(ngModel)]="selectedElement.src" (ngModelChange)="updateSelectedElementProperty('src', $event)">
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="isVideoElement(selectedElement)">
+            <div class="form-group">
+              <label>Video URL:</label>
+              <input type="text" [(ngModel)]="selectedElement.src" (ngModelChange)="updateSelectedElementProperty('src', $event)">
+            </div>
+            <div class="form-group">
+              <label>Loop:</label>
+              <input type="checkbox" [(ngModel)]="selectedElement.loop" (ngModelChange)="updateSelectedElementProperty('loop', $event)">
+            </div>
+            <div class="form-group">
+              <label>Autoplay:</label>
+              <input type="checkbox" [(ngModel)]="selectedElement.autoplay" (ngModelChange)="updateSelectedElementProperty('autoplay', $event)">
+            </div>
+            <div class="form-group">
+              <label>Muted:</label>
+              <input type="checkbox" [(ngModel)]="selectedElement.muted" (ngModelChange)="updateSelectedElementProperty('muted', $event)">
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="isWebElement(selectedElement)">
+            <div class="form-group">
+              <label>Web URL:</label>
+              <input type="text" [(ngModel)]="selectedElement.url" (ngModelChange)="updateSelectedElementProperty('url', $event)">
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="isChatElement(selectedElement)">
+            <div class="form-group">
+              <label>Max Messages:</label>
+              <input type="number" [(ngModel)]="selectedElement.maxMessages" (ngModelChange)="updateSelectedElementProperty('maxMessages', $event)">
+            </div>
+            <div class="form-group">
+              <label>Font Size:</label>
+              <input type="number" [(ngModel)]="selectedElement.fontSize" (ngModelChange)="updateSelectedElementProperty('fontSize', $event)">
+            </div>
+            <div class="form-group">
+              <label>Text Color:</label>
+              <input type="color" [(ngModel)]="selectedElement.textColor" (ngModelChange)="updateSelectedElementProperty('textColor', $event)">
+            </div>
+            <div class="form-group">
+              <label>Background Color:</label>
+              <input type="color" [(ngModel)]="selectedElement.backgroundColor" (ngModelChange)="updateSelectedElementProperty('backgroundColor', $event)">
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="isAlertElement(selectedElement)">
+            <div class="form-group">
+              <label>Default Image URL:</label>
+              <input type="text" [(ngModel)]="selectedElement.defaultImage" (ngModelChange)="updateSelectedElementProperty('defaultImage', $event)">
+            </div>
+            <div class="form-group">
+              <label>Default Sound URL:</label>
+              <input type="text" [(ngModel)]="selectedElement.defaultSound" (ngModelChange)="updateSelectedElementProperty('defaultSound', $event)">
+            </div>
+            <div class="form-group">
+              <label>Duration (ms):</label>
+              <input type="number" [(ngModel)]="selectedElement.duration" (ngModelChange)="updateSelectedElementProperty('duration', $event)">
+            </div>
+            <div class="form-group">
+              <label>Animation:</label>
+              <input type="text" [(ngModel)]="selectedElement.animation" (ngModelChange)="updateSelectedElementProperty('animation', $event)">
+            </div>
+            <div class="form-group">
+              <label>Template:</label>
+              <input type="text" [(ngModel)]="selectedElement.template" (ngModelChange)="updateSelectedElementProperty('template', $event)">
+            </div>
+          </ng-container>
+
+        </div>
+        <div *ngIf="!selectedElement">
+          <p>Select an element to edit its properties.</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="canvas-area">
+      <div class="canvas-wrapper">
+        <!-- Overlay elements rendered here. For simplicity in editor, we just show basic divs. -->
+        <div
+          *ngFor="let element of overlayElements"
+          class="overlay-element-preview"
+          [class.selected]="selectedElement && selectedElement.id === element.id"
+          [ngStyle]="{
+            position: 'absolute',
+            left: element.x + 'px',
+            top: element.y + 'px',
+            width: element.width + 'px',
+            height: element.height + 'px',
+            opacity: element.opacity,
+            zIndex: element.zIndex,
+            border: (selectedElement && selectedElement.id === element.id) ? '2px dashed blue' : 'none',
+            display: element.visible ? 'block' : 'none',
+            overflow: 'hidden',
+            backgroundColor: (element.type === 'web' || element.type === 'video') ? 'transparent' : 'rgba(100, 100, 100, 0.5)',
+            cursor: element.locked ? 'default' : 'grab', // Cursor changes based on locked state
+            transform: 'rotate(' + element.rotation + 'deg)' // Apply rotation
+          }"
+          (click)="selectElement(element)"
+          cdkDrag
+          (cdkDragEnded)="onDragEnded($event, element)"
+          [cdkDragDisabled]="element.locked" // Disable drag if element is locked
+          mwlResizable
+          [resizeEdges]="{bottom: true, right: true, top: true, left: true}"
+          [enableGhostResize]="true"
+          (resizeEnd)="onResizeEnd($event, element)"
+          [resizeEnabled]="!element.locked"
+        >
+          <div
+            *ngIf="selectedElement && selectedElement.id === element.id && !element.locked"
+            class="rotation-handle"
+            (mousedown)="onRotationStart($event, element)"
+          ></div>
+          <ng-container *ngIf="isTextElement(element)">
+            <span [ngStyle]="{
+              fontFamily: element.fontFamily,
+              fontSize: element.fontSize + 'px',
+              color: element.fill,
+              textAlign: element.textAlign,
+              fontWeight: element.fontWeight,
+              fontStyle: element.fontStyle,
+              textDecoration: element.textDecoration
+            }">{{ element.text }}</span>
+          </ng-container>
+          <ng-container *ngIf="isImageElement(element)">
+            <img [src]="element.src" [ngStyle]="{ width: '100%', height: '100%', objectFit: 'contain' }">
+          </ng-container>
+          <ng-container *ngIf="isVideoElement(element)">
+            <div class="video-placeholder">Video ({{ element.src }})</div>
+          </ng-container>
+          <ng-container *ngIf="isWebElement(element)">
+            <div class="web-placeholder">Web Source ({{ element.url }})</div>
+          </ng-container>
+          <ng-container *ngIf="isChatElement(element)">
+            <div class="chat-placeholder-editor" [ngStyle]="{
+              fontSize: element.fontSize + 'px',
+              color: element.textColor,
+              backgroundColor: element.backgroundColor
+            }">
+              Chat Preview
+            </div>
+          </ng-container>
+          <ng-container *ngIf="isAlertElement(element)">
+            <div class="alert-placeholder-editor" [ngStyle]="{
+              backgroundColor: 'rgba(255, 255, 0, 0.7)'
+            }">
+              <img [src]="element.defaultImage" alt="Alert Image" style="max-width: 50px; max-height: 50px;">
+              <p>Alert Preview ({{ element.template }})</p>
+            </div>
+          </ng-container>
+        </div>
+        <div *ngIf="overlayElements.length === 0" class="canvas-placeholder">
+          <p>Add elements from the sidebar to build your overlay.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

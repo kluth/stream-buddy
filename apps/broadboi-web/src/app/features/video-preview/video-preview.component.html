@@ -1,0 +1,12 @@
+<div class="video-container">
+  <video #videoElement [muted]="isMuted()" playsinline></video>
+
+  <div class="controls" *ngIf="streamActive()">
+    <button (click)="togglePlay()">
+      {{ isPlaying() ? 'Pause' : 'Play' }}
+    </button>
+    <button (click)="toggleMute()">
+      {{ isMuted() ? 'Unmute' : 'Mute' }}
+    </button>
+  </div>
+</div>

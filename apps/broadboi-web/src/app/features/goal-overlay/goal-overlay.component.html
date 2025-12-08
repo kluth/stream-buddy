@@ -1,0 +1,357 @@
+<div class="goal-overlay-container">
+  <!-- Editor Panel (shown if showEditor is true) -->
+  @if (showEditor) {
+    <div class="goal-editor-panel">
+      <div class="editor-header">
+        <h3>Goal Manager</h3>
+        <div class="editor-actions">
+          <button class="btn-primary btn-sm" (click)="createNewGoal()">➕ New Goal</button>
+          <button class="btn-secondary btn-sm" (click)="showTemplates.set(!showTemplates())">
+            📋 Templates
+          </button>
+          <button class="btn-secondary btn-sm" (click)="showImportExport.set(!showImportExport())">
+            💾 Import/Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Templates -->
+      @if (showTemplates()) {
+        <div class="templates-section">
+          <h4>Goal Templates</h4>
+          <div class="templates-grid">
+            @for (template of templates(); track template.id) {
+              <div class="template-card" (click)="createFromTemplate(template.id)">
+                <span class="template-icon" [style.color]="template.color">{{ template.icon }}</span>
+                <div class="template-info">
+                  <div class="template-name">{{ template.name }}</div>
+                  <div class="template-desc">{{ template.description }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Import/Export -->
+      @if (showImportExport()) {
+        <div class="import-export-section">
+          <h4>Import/Export Goals</h4>
+          <div class="import-export-actions">
+            <button class="btn-secondary btn-block" (click)="exportGoals()">
+              ⬇️ Export All Goals
+            </button>
+            <input
+              type="file"
+              id="import-goals"
+              accept="application/json"
+              (change)="importGoals($event)"
+              hidden
+            />
+            <label for="import-goals" class="btn-secondary btn-block" style="margin: 0">
+              ⬆️ Import Goals
+            </label>
+          </div>
+        </div>
+      }
+
+      <!-- Goal List -->
+      <div class="goal-list">
+        <h4>Active Goals</h4>
+        @for (goal of activeGoals(); track goal.id) {
+          <div
+            class="goal-list-item"
+            [class.selected]="selectedGoal()?.id === goal.id"
+            (click)="selectGoal(goal)"
+          >
+            <span class="goal-icon">{{ getGoalIcon(goal) }}</span>
+            <div class="goal-info">
+              <div class="goal-name">{{ goal.name }}</div>
+              <div class="goal-progress-mini">
+                <div class="progress-bar-mini">
+                  <div
+                    class="progress-fill-mini"
+                    [style.width.%]="getProgress(goal.id)"
+                    [style.backgroundColor]="goal.color"
+                  ></div>
+                </div>
+                <span class="progress-text-mini">{{ getProgress(goal.id) | number: '1.0-0' }}%</span>
+              </div>
+            </div>
+            <button
+              class="btn-icon btn-danger btn-xs"
+              (click)="deleteGoal(goal.id); $event.stopPropagation()"
+              title="Delete goal"
+            >
+              🗑️
+            </button>
+          </div>
+        }
+
+        @if (activeGoals().length === 0) {
+          <div class="empty-state">
+            <p>No active goals</p>
+            <button class="btn-primary btn-sm" (click)="createNewGoal()">Create First Goal</button>
+          </div>
+        }
+      </div>
+
+      <!-- Goal Editor -->
+      @if (editorMode() !== 'view' && (editorMode() === 'create' || selectedGoal())) {
+        <div class="goal-editor">
+          <h4>{{ editorMode() === 'create' ? 'Create Goal' : 'Edit Goal' }}</h4>
+
+          <div class="form-group">
+            <label>Name</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="editingGoal().name"
+              placeholder="Goal name"
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Type</label>
+              <select class="form-control" [(ngModel)]="editingGoal().type">
+                <option value="follower">Follower</option>
+                <option value="subscriber">Subscriber</option>
+                <option value="donation">Donation</option>
+                <option value="bits">Bits</option>
+                <option value="viewer">Viewer</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Visual Style</label>
+              <select class="form-control" [(ngModel)]="editingGoal().visualStyle">
+                <option value="progress-bar">Progress Bar</option>
+                <option value="circular">Circular</option>
+                <option value="counter">Counter</option>
+                <option value="thermometer">Thermometer</option>
+                <option value="milestone">Milestone</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Target Value</label>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="editingGoal().targetValue"
+                min="0"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Current Value</label>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="editingGoal().currentValue"
+                min="0"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Color</label>
+            <input type="color" class="form-control color-input" [(ngModel)]="editingGoal().color" />
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-primary" (click)="saveGoal()">Save</button>
+            <button class="btn-secondary" (click)="cancelEdit()">Cancel</button>
+          </div>
+        </div>
+      }
+
+      <!-- Goal Details -->
+      @if (selectedGoal() && editorMode() === 'view') {
+        <div class="goal-details">
+          <h4>{{ selectedGoal()!.name }}</h4>
+
+          <div class="goal-stats">
+            <div class="stat">
+              <span class="stat-label">Current</span>
+              <span class="stat-value">{{ formatValue(selectedGoal()!, selectedGoal()!.currentValue) }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Target</span>
+              <span class="stat-value">{{ formatValue(selectedGoal()!, selectedGoal()!.targetValue) }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Remaining</span>
+              <span class="stat-value">{{ formatValue(selectedGoal()!, getRemaining(selectedGoal()!.id)) }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Progress</span>
+              <span class="stat-value">{{ getProgress(selectedGoal()!.id) | number: '1.0-0' }}%</span>
+            </div>
+          </div>
+
+          <div class="goal-actions">
+            <button class="btn-primary btn-sm" (click)="editGoal()">✏️ Edit</button>
+            <button class="btn-secondary btn-sm" (click)="resetGoal(selectedGoal()!.id)">
+              🔄 Reset
+            </button>
+            <button class="btn-secondary btn-sm" (click)="incrementGoal(selectedGoal()!.id, 10)">
+              ➕ Test +10
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Goal Display Area -->
+  <div class="goal-display-area" [class.with-editor]="showEditor">
+    @for (goal of displayedGoals(); track goal.id) {
+      <div
+        class="goal-widget"
+        [class]="getVisualStyleClass(goal.visualStyle)"
+        [class.celebrating]="isCelebrating(goal.id)"
+        [class.animating]="isAnimating(goal.id)"
+        [class.completed]="goal.isCompleted"
+        [style.width.px]="goal.width"
+        [style.height.px]="goal.height"
+      >
+        <!-- Progress Bar Style -->
+        @if (goal.visualStyle === 'progress-bar') {
+          <div class="progress-bar-widget">
+            <div class="widget-header">
+              <span class="widget-icon">{{ getGoalIcon(goal) }}</span>
+              <span class="widget-title" [style.fontSize.px]="goal.fontSize">{{ goal.name }}</span>
+            </div>
+            <div class="progress-bar-container">
+              <div
+                class="progress-bar-fill"
+                [style.width.%]="getProgress(goal.id)"
+                [style.backgroundColor]="goal.color"
+              ></div>
+            </div>
+            <div class="widget-info">
+              @if (goal.showCurrent) {
+                <span class="value-current">{{ formatValue(goal, goal.currentValue) }}</span>
+              }
+              @if (goal.showPercentage) {
+                <span class="value-percentage">{{ getProgress(goal.id) | number: '1.0-0' }}%</span>
+              }
+              @if (goal.showTarget) {
+                <span class="value-target">/ {{ formatValue(goal, goal.targetValue) }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Circular Style -->
+        @if (goal.visualStyle === 'circular') {
+          <div class="circular-widget">
+            <svg class="circular-svg" [attr.viewBox]="'0 0 200 200'">
+              <circle
+                class="circular-bg"
+                cx="100"
+                cy="100"
+                r="80"
+                [attr.stroke]="goal.backgroundColor"
+              />
+              <circle
+                class="circular-progress"
+                cx="100"
+                cy="100"
+                r="80"
+                [attr.stroke]="goal.color"
+                [style.strokeDasharray]="502.4"
+                [style.strokeDashoffset]="502.4 - (502.4 * getProgress(goal.id)) / 100"
+              />
+            </svg>
+            <div class="circular-content">
+              <span class="circular-icon">{{ getGoalIcon(goal) }}</span>
+              <div class="circular-text">
+                @if (goal.showPercentage) {
+                  <div class="circular-percentage" [style.fontSize.px]="goal.fontSize * 1.5">
+                    {{ getProgress(goal.id) | number: '1.0-0' }}%
+                  </div>
+                }
+                <div class="circular-label" [style.fontSize.px]="goal.fontSize">{{ goal.name }}</div>
+                @if (goal.showCurrent && goal.showTarget) {
+                  <div class="circular-values" [style.fontSize.px]="goal.fontSize * 0.75">
+                    {{ formatValue(goal, goal.currentValue) }} / {{ formatValue(goal, goal.targetValue) }}
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Counter Style -->
+        @if (goal.visualStyle === 'counter') {
+          <div class="counter-widget">
+            <span class="counter-icon">{{ getGoalIcon(goal) }}</span>
+            <div class="counter-content">
+              <div class="counter-label" [style.fontSize.px]="goal.fontSize">{{ goal.name }}</div>
+              <div class="counter-value" [style.fontSize.px]="goal.fontSize * 2" [style.color]="goal.color">
+                {{ formatValue(goal, goal.currentValue) }}
+              </div>
+              @if (goal.showTarget) {
+                <div class="counter-target" [style.fontSize.px]="goal.fontSize * 0.875">
+                  Goal: {{ formatValue(goal, goal.targetValue) }}
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Thermometer Style -->
+        @if (goal.visualStyle === 'thermometer') {
+          <div class="thermometer-widget">
+            <div class="thermometer-header">
+              <span class="thermometer-icon">{{ getGoalIcon(goal) }}</span>
+              <span class="thermometer-title" [style.fontSize.px]="goal.fontSize">{{ goal.name }}</span>
+            </div>
+            <div class="thermometer-container">
+              <div class="thermometer-fill" [style.height.%]="getProgress(goal.id)" [style.backgroundColor]="goal.color"></div>
+            </div>
+            <div class="thermometer-labels">
+              <span class="thermometer-current" [style.color]="goal.color">
+                {{ formatValue(goal, goal.currentValue) }}
+              </span>
+              <span class="thermometer-target">{{ formatValue(goal, goal.targetValue) }}</span>
+            </div>
+          </div>
+        }
+
+        <!-- Milestone Style -->
+        @if (goal.visualStyle === 'milestone') {
+          <div class="milestone-widget">
+            <div class="milestone-header">
+              <span class="milestone-icon">{{ getGoalIcon(goal) }}</span>
+              <span class="milestone-title" [style.fontSize.px]="goal.fontSize">{{ goal.name }}</span>
+            </div>
+            <div class="milestone-track">
+              @for (milestone of getMilestones(goal.id); track milestone.value) {
+                <div class="milestone-marker" [class.achieved]="milestone.achieved">
+                  <div class="milestone-dot" [style.backgroundColor]="milestone.achieved ? goal.color : goal.backgroundColor"></div>
+                  <div class="milestone-label" [style.fontSize.px]="goal.fontSize * 0.75">
+                    {{ formatValue(goal, milestone.value) }}
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Celebration Overlay -->
+        @if (isCelebrating(goal.id)) {
+          <div class="celebration-overlay">
+            <div class="celebration-text">🎉 Goal Completed! 🎉</div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

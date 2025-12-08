@@ -1,0 +1,5 @@
+{
+  "cli": {
+    "configName": "dist/apps/api/ormconfig.js"
+  }
+}

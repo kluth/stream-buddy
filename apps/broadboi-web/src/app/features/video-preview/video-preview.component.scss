@@ -1,0 +1,39 @@
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+
+  video {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+
+    button {
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+  }
+
+  .error-message {
+    color: white;
+    background: red;
+    padding: 10px;
+    text-align: center;
+  }
+}

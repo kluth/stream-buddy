@@ -1,0 +1,64 @@
+.stream-config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background-color: #252526;
+  border-radius: 8px;
+  color: #f0f0f0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  
+  label {
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+    color: #aaa;
+    font-size: 0.9rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    padding: 0.75rem;
+    border: 1px solid #3e3e42;
+    border-radius: 4px;
+    background-color: #3c3c3c;
+    color: #f0f0f0;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus {
+      border-color: #007fd4;
+      box-shadow: 0 0 0 2px rgba(0, 127, 212, 0.3);
+      outline: none;
+    }
+    
+    &.ng-invalid.ng-touched {
+        border-color: #f44336;
+    }
+  }
+
+  textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  select {
+    appearance: none; /* Remove default arrow */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23cccccc%22%20d%3D%22M287%2C197.9L159.2%2C68.2c-2.4-2.4-5.9-4.2-9.7-4.2c-3.8%2C0-7.3%2C1.8-9.7%2C4.2L5.4%2C197.9c-3.2%2C3.2-4.9%2C7.3-4.9%2C11.1c0%2C3.8%2C1.8%2C7.3%2C4.9%2C10.3l11.1%2C11.1c2.4%2C2.4%2C5.9%2C4.2%2C9.7%2C4.2c3.8%2C0%2C7.3-1.8%2C9.7-4.2l115.5-115.5l115.5%2C115.5c2.4%2C2.4%2C5.9%2C4.2%2C9.7%2C4.2c3.8%2C0%2C7.3-1.8%2C9.7-4.2l11.1-11.1c3.2-3.2%2C4.9-7.3%2C4.9-10.3C292.4%2C205.2%2C290.7%2C201.1%2C287%2C197.9z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 0.7em top 50%;
+    background-size: 0.65em auto;
+    padding-right: 2.5em; /* Space for the custom arrow */
+  }
+}
+
+.error-message {
+  color: #f44336;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}

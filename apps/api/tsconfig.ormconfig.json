@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs", // Compile as CommonJS for TypeORM CLI
+    "outDir": "../../dist/out-tsc", // Ensure it compiles to a temporary directory
+    "types": ["node"]
+  },
+  "files": ["ormconfig.ts"], // Only compile ormconfig.ts
+  "exclude": ["**/*.spec.ts"]
+}

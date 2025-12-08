@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mediamtx:
     image: bluenviron/mediamtx:latest
-    container_name: stream-buddy-mediamtx
+    container_name: broadboi-mediamtx
     restart: unless-stopped
 
     ports:
@@ -35,8 +35,8 @@ services:
       start_period: 10s
 
     networks:
-      - stream-buddy-network
+      - broadboi-network
 
 networks:
-  stream-buddy-network:
+  broadboi-network:
     driver: bridge

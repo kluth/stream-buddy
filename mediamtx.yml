@@ -1,5 +1,5 @@
 ###############################################
-# Stream Buddy - MediaMTX Configuration
+# BroadBoi - MediaMTX Configuration
 ###############################################
 
 # General settings
@@ -14,8 +14,8 @@ apiAddress: :9997
 # WebRTC settings
 webrtc: yes
 webrtcAddress: :8889
-webrtcServerKey: server.key
-webrtcServerCert: server.crt
+webrtcServerKey: tls/localhost-key.pem
+webrtcServerCert: tls/localhost-cert.pem
 webrtcAllowOrigin: '*'
 webrtcTrustedProxies: []
 webrtcICEServers2:

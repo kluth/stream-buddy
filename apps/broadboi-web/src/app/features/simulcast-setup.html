@@ -1,0 +1,89 @@
+<div class="simulcast-container">
+  <h1>Simulcast Setup</h1>
+
+  <div *ngIf="statusMessage" class="status-message">
+    {{ statusMessage }}
+  </div>
+
+  <section class="platform-connections">
+    <h2>Connected Platforms</h2>
+    <div *ngFor="let dest of availableDestinations">
+      <div *ngIf="dest.platformType !== 'rtmp'" class="platform-item">
+        <span>{{ dest.name }}</span>
+        <button *ngIf="!dest.connected" (click)="connectPlatform(dest)">Connect</button>
+        <span *ngIf="dest.connected">Connected (Stream Key: {{ dest.streamKey || (dest.ingestionAddress + '/' + dest.streamName) || 'N/A' }})</span>
+        <label *ngIf="dest.connected" class="toggle-switch">
+          <input type="checkbox" [(ngModel)]="dest.enabled">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section class="custom-rtmp-setup">
+    <h2>Custom RTMP Destination</h2>
+    <div class="form-group">
+      <label for="rtmp-name">Name (Optional)</label>
+      <input id="rtmp-name" type="text" [(ngModel)]="customRtmpDestination.name" placeholder="e.g., My Backup Server">
+    </div>
+    <div class="form-group">
+      <label for="rtmp-url">RTMP URL</label>
+      <input id="rtmp-url" type="text" [(ngModel)]="customRtmpDestination.url" placeholder="rtmp://your.server.com/app">
+    </div>
+    <div class="form-group">
+      <label for="rtmp-key">Stream Key</label>
+      <input id="rtmp-key" type="text" [(ngModel)]="customRtmpDestination.streamKey" placeholder="your_stream_key">
+    </div>
+    <button (click)="addCustomRtmpDestination()">Add Custom RTMP</button>
+  </section>
+
+  <section class="active-destinations">
+    <h2>Active Destinations</h2>
+    <div *ngIf="availableDestinations.filter(d => d.enabled).length === 0">
+      No destinations enabled for simulcast.
+    </div>
+    <div *ngFor="let dest of availableDestinations.filter(d => d.enabled)" class="active-item">
+      <span>{{ dest.name }}</span>
+      <button class="remove-btn" (click)="removeDestination(dest.id)">Remove</button>
+
+      <div class="encoding-parameters">
+        <h3>Encoding Parameters for {{ dest.name }}</h3>
+        <div class="form-group">
+          <label for="video-bitrate-{{dest.id}}">Video Bitrate (kbps)</label>
+          <input id="video-bitrate-{{dest.id}}" type="number" [(ngModel)]="dest.videoBitrate" placeholder="e.g., 4000">
+        </div>
+        <div class="form-group">
+          <label for="audio-bitrate-{{dest.id}}">Audio Bitrate (kbps)</label>
+          <input id="audio-bitrate-{{dest.id}}" type="number" [(ngModel)]="dest.audioBitrate" placeholder="e.g., 128">
+        </div>
+        <div class="form-group">
+          <label for="resolution-{{dest.id}}">Resolution (WxH)</label>
+          <input id="resolution-{{dest.id}}" type="text" [(ngModel)]="dest.resolution" placeholder="e.g., 1920x1080">
+        </div>
+        <div class="form-group">
+          <label for="frame-rate-{{dest.id}}">Frame Rate (fps)</label>
+          <input id="frame-rate-{{dest.id}}" type="number" [(ngModel)]="dest.frameRate" placeholder="e.g., 30">
+        </div>
+        <div class="form-group">
+          <label for="keyframe-interval-{{dest.id}}">Keyframe Interval (s)</label>
+          <input id="keyframe-interval-{{dest.id}}" type="number" [(ngModel)]="dest.keyframeInterval" placeholder="e.g., 2">
+        </div>
+        <div class="form-group">
+          <label for="codec-profile-{{dest.id}}">Codec Profile</label>
+          <input id="codec-profile-{{dest.id}}" type="text" [(ngModel)]="dest.codecProfile" placeholder="e.g., high">
+        </div>
+        <div class="form-group">
+          <label for="encoding-preset-{{dest.id}}">Encoding Preset</label>
+          <input id="encoding-preset-{{dest.id}}" type="text" [(ngModel)]="dest.encodingPreset" placeholder="e.g., veryfast">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="simulcast-controls">
+    <button (click)="startSimulcast()" [disabled]="isSimulcasting || availableDestinations.filter(d => d.enabled).length === 0">
+      {{ isSimulcasting ? 'Simulcasting...' : 'Start Simulcast' }}
+    </button>
+    <button (click)="stopSimulcast()" [disabled]="!isSimulcasting">Stop Simulcast</button>
+  </section>
+</div>

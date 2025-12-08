@@ -1,0 +1,91 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Live Dashboard</h1>
+    <div class="status-badge" [class]="sessionState() || 'disconnected'">
+      {{ sessionState() || 'Ready' | titlecase }}
+    </div>
+  </header>
+
+  <div class="main-content">
+    <div class="preview-section">
+      <app-video-preview [stream]="cameraStream()"></app-video-preview>
+      
+      @if (isStreaming()) {
+        <div class="stats-overlay">
+          <app-stream-stats></app-stream-stats>
+        </div>
+      }
+    </div>
+
+    <aside class="controls-sidebar">
+      <div class="control-group">
+        <h3>Input Sources</h3>
+        <button (click)="startCamera()">
+          {{ cameraStream() ? 'Stop Camera' : 'Start Camera' }}
+        </button>
+        <button (click)="startMicrophone()">
+          {{ microphoneStream() ? 'Stop Microphone' : 'Start Microphone' }}
+        </button>
+      </div>
+
+      <div class="control-group">
+        <h3>Aspect Ratio</h3>
+        <select [ngModel]="currentAspectRatio()" (ngModelChange)="currentAspectRatio.set($event)">
+          <option value="16:9">16:9 (Landscape)</option>
+          <option value="9:16">9:16 (Vertical)</option>
+          <option value="1:1">1:1 (Square)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <h3>Destinations</h3>
+        <div class="platform-selector">
+          <label class="platform-checkbox">
+            <input type="checkbox" 
+                   (change)="togglePlatform('twitch', $event)"
+                   [disabled]="isStreaming()">
+            <span class="platform-name">Twitch</span>
+            <span class="platform-status" [class]="getPlatformStatus('twitch')">
+              {{ getPlatformStatus('twitch') }}
+            </span>
+          </label>
+
+          <label class="platform-checkbox">
+            <input type="checkbox" 
+                   (change)="togglePlatform('youtube', $event)"
+                   [disabled]="isStreaming()">
+            <span class="platform-name">YouTube</span>
+            <span class="platform-status" [class]="getPlatformStatus('youtube')">
+              {{ getPlatformStatus('youtube') }}
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="control-group actions">
+        @if (!isStreaming()) {
+          <button class="btn-primary start-btn"
+                  [disabled]="selectedPlatforms().size === 0 || !cameraStream() || sessionState() === 'initializing' || sessionState() === 'connecting'"
+                  (click)="startStreaming()">
+            Start Streaming
+          </button>
+        } @else {
+          <button class="btn-danger stop-btn"
+                  (click)="stopStreaming()">
+            Stop Streaming
+          </button>
+        }
+      </div>
+
+      <div class="control-group">
+        <button class="btn-secondary" (click)="testSentryError()">Test Sentry Error</button>
+      </div>
+      
+      @if (activeSession()?.error) {
+        <div class="error-message">
+          {{ activeSession()?.error }}
+        </div>
+      }
+    </aside>
+  </div>
+</div>

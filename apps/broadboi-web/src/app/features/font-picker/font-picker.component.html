@@ -1,0 +1,159 @@
+<div class="font-picker">
+  <!-- Header -->
+  <div class="font-picker-header">
+    <h3>Font Library</h3>
+    <div class="header-actions">
+      <button class="btn-icon" (click)="toggleViewMode()" [title]="viewMode() === 'grid' ? 'List View' : 'Grid View'">
+        {{ viewMode() === 'grid' ? '☰' : '▦' }}
+      </button>
+      @if (showUpload) {
+        <button class="btn-primary btn-sm" (click)="showUploadDialog.set(true)">
+          ➕ Upload Font
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Font Presets -->
+  @if (showPresets && presets().length > 0) {
+    <div class="font-presets">
+      <h4>Presets</h4>
+      <div class="presets-grid">
+        @for (preset of presets(); track preset.id) {
+          <div class="preset-card" (click)="applyPreset(preset.id)">
+            <div class="preset-name">{{ preset.name }}</div>
+            <div class="preset-description">{{ preset.description }}</div>
+            <div class="preset-fonts">
+              <span class="preset-font" [style.fontFamily]="preset.fonts.heading">Aa</span>
+              <span class="preset-font" [style.fontFamily]="preset.fonts.body">Aa</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Search and Filters -->
+  <div class="font-filters">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search fonts..."
+      [value]="searchQuery()"
+      (input)="searchQuery.set($any($event.target).value)"
+    />
+    <select
+      class="category-select"
+      [value]="selectedCategory()"
+      (change)="selectedCategory.set($any($event.target).value)"
+    >
+      @for (category of categories; track category.value) {
+        <option [value]="category.value">{{ category.label }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoadingGoogleFonts()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading Google Fonts...</p>
+    </div>
+  }
+
+  <!-- Font Grid/List -->
+  <div class="font-list" [class.grid-mode]="viewMode() === 'grid'" [class.list-mode]="viewMode() === 'list'">
+    @for (font of filteredFonts(); track font.id) {
+      <div
+        class="font-item"
+        [class.selected]="selectedFont === font.name"
+        [class.loaded]="font.loaded"
+        (click)="selectFont(font.name)"
+      >
+        <div class="font-header">
+          <div class="font-info">
+            <span class="font-name">{{ font.name }}</span>
+            <span class="font-badge" [style.backgroundColor]="getCategoryColor(font.category)">
+              {{ font.category }}
+            </span>
+            @if (font.source === 'custom') {
+              <button
+                class="btn-icon btn-danger btn-xs"
+                (click)="removeFont(font.id); $event.stopPropagation()"
+                title="Remove font"
+              >
+                🗑️
+              </button>
+            }
+          </div>
+          @if (!font.loaded) {
+            <span class="font-status">Not loaded</span>
+          }
+        </div>
+        <div class="font-preview" [style]="getFontStyle(font.name)">
+          {{ previewText }}
+        </div>
+      </div>
+    }
+
+    @if (filteredFonts().length === 0) {
+      <div class="empty-state">
+        <p>No fonts found</p>
+        @if (searchQuery()) {
+          <button class="btn-secondary btn-sm" (click)="searchQuery.set('')">
+            Clear search
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Upload Dialog -->
+  @if (showUploadDialog()) {
+    <div class="dialog-overlay" (click)="showUploadDialog.set(false)">
+      <div class="dialog" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+          <h3>Upload Custom Font</h3>
+          <button class="btn-icon" (click)="showUploadDialog.set(false)">✕</button>
+        </div>
+        <div class="dialog-body">
+          <p>Upload a custom font file (.ttf, .otf, .woff, .woff2)</p>
+
+          <div class="upload-area">
+            <input
+              type="file"
+              id="font-file"
+              accept=".ttf,.otf,.woff,.woff2"
+              (change)="onFileSelected($event)"
+              hidden
+            />
+            <label for="font-file" class="upload-label">
+              📁 Choose Font File
+            </label>
+          </div>
+
+          @if (uploadProgress() > 0) {
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="uploadProgress()"></div>
+            </div>
+          }
+
+          <div class="divider">OR</div>
+
+          <button class="btn-secondary btn-block" (click)="loadFontFromURL()">
+            🔗 Load from URL
+          </button>
+
+          <div class="upload-info">
+            <p><strong>Supported formats:</strong></p>
+            <ul>
+              <li>TrueType (.ttf)</li>
+              <li>OpenType (.otf)</li>
+              <li>Web Open Font Format (.woff, .woff2)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
