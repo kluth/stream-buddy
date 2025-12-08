@@ -68,4 +68,6 @@ export * from './virtual-device.service';
 export * from './vod-chapters.service';
 export * from './vod-editor.service';
 export * from './webrtc-gateway.service';
+export * from './webrtc-gateway.config';
+export * from './webrtc-gateway.helpers';
 export * from './whiteboard.service';
